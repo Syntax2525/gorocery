@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Products - PicknCart</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<main class="container">
+    <h1>Manage Products</h1>
+    <p><a th:href="@{/admin/dashboard}">Back to Dashboard</a></p>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <section class="auth-card">
+        <h2>Create Product</h2>
+        <form th:action="@{/admin/products}" method="post" enctype="multipart/form-data">
+            <input type="text" name="name" placeholder="Product name" required>
+            <input type="text" name="description" placeholder="Description">
+            <input type="number" step="0.01" min="0" name="price" placeholder="Price" required>
+
+            <label>Image URL (optional)</label>
+            <input type="text" name="imageUrl" placeholder="https://example.com/image.jpg">
+
+            <label>Upload Image From Device (optional)</label>
+            <input type="file" name="imageFile" accept="image/*">
+
+            <label>Take Photo With Camera (optional)</label>
+            <input type="file" name="cameraImage" accept="image/*" capture="environment">
+
+            <input type="number" min="0" name="stock" placeholder="Stock" required>
+            <select name="categoryId" required>
+                <option value="">Select category</option>
+                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"></option>
+            </select>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-primary" type="submit">Create</button>
+        </form>
+    </section>
+
+    <section class="products">
+        <h2>Existing Products</h2>
+        <div class="product-grid" th:if="${products != null and !products.isEmpty()}">
+            <div class="product-card" th:each="product : ${products}">
+                <div class="product-info">
+                    <img th:if="${product.imageUrl != null and !#strings.isEmpty(product.imageUrl)}" th:src="${product.imageUrl}" th:alt="${product.name}" class="product-image">
+
+                    <form th:action="@{'/admin/products/' + ${product.id} + '/update'}" method="post" enctype="multipart/form-data">
+                        <input type="text" name="name" th:value="${product.name}" required>
+                        <input type="text" name="description" th:value="${product.description}">
+                        <input type="number" step="0.01" min="0" name="price" th:value="${product.price}" required>
+
+                        <label>Image URL (optional)</label>
+                        <input type="text" name="imageUrl" th:value="${product.imageUrl}">
+
+                        <label>Upload New Image From Device (optional)</label>
+                        <input type="file" name="imageFile" accept="image/*">
+
+                        <label>Take New Photo With Camera (optional)</label>
+                        <input type="file" name="cameraImage" accept="image/*" capture="environment">
+
+                        <input type="number" min="0" name="stock" th:value="${product.stock}" required>
+                        <select name="categoryId" required>
+                            <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}" th:selected="${product.category != null and product.category.id == category.id}"></option>
+                        </select>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button class="btn btn-primary" type="submit">Update</button>
+                    </form>
+
+                    <form th:action="@{'/admin/products/' + ${product.id} + '/delete'}" method="post" style="margin-top:10px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button class="btn" type="submit">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <p th:if="${products == null or products.isEmpty()}">No products found.</p>
+    </section>
+</main>
+</body>
+</html>

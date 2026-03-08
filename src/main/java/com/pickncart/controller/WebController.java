@@ -1,5 +1,15 @@
 package com.pickncart.controller;
 
+import com.pickncart.model.Cart;
+import com.pickncart.model.Item;
+import com.pickncart.model.Order;
+import com.pickncart.model.OrderItem;
+import com.pickncart.model.User;
+import com.pickncart.service.CartService;
+import com.pickncart.service.ItemService;
+import com.pickncart.service.OrderService;
+import com.pickncart.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -9,17 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.pickncart.service.ItemService;
-import com.pickncart.service.CartService;
-import com.pickncart.service.OrderService;
-import com.pickncart.service.UserService;
-import com.pickncart.model.Item;
-import com.pickncart.model.User;
-import com.pickncart.model.Cart;
-import com.pickncart.model.Order;
-import com.pickncart.model.OrderItem;
+
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -58,6 +59,15 @@ public class WebController {
     @GetMapping("/login")
     public String login() {
         return "login";
+    }
+
+    @GetMapping("/admin/dashboard")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String adminDashboard(Model model) {
+        model.addAttribute("totalUsers", userService.getAllUsers().size());
+        model.addAttribute("totalProducts", itemService.getAll().size());
+        model.addAttribute("totalOrders", orderService.getAllOrders().size());
+        return "admin-dashboard";
     }
 
     @GetMapping("/cart")
@@ -116,9 +126,9 @@ public class WebController {
     }
 
     @PostMapping("/cart/add")
-    public String addToCart(@RequestParam Long itemId, 
-                           @RequestParam(defaultValue = "1") int quantity,
-                           RedirectAttributes redirectAttributes) {
+    public String addToCart(@RequestParam Long itemId,
+                            @RequestParam(defaultValue = "1") int quantity,
+                            RedirectAttributes redirectAttributes) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             redirectAttributes.addFlashAttribute("error", "Please login to add items to cart");
@@ -135,7 +145,7 @@ public class WebController {
         cart.setUser(currentUser);
         cart.setItem(itemOpt.get());
         cart.setQuantity(quantity);
-        
+
         cartService.addToCart(cart);
         redirectAttributes.addFlashAttribute("success", "Item added to cart");
         return "redirect:/cart";
@@ -156,9 +166,9 @@ public class WebController {
 
     @PostMapping("/checkout")
     public String processCheckout(@RequestParam String address,
-                                 @RequestParam String phone,
-                                 @RequestParam String paymentMethod,
-                                 RedirectAttributes redirectAttributes) {
+                                  @RequestParam String phone,
+                                  @RequestParam String paymentMethod,
+                                  RedirectAttributes redirectAttributes) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             redirectAttributes.addFlashAttribute("error", "Please login to checkout");
@@ -171,7 +181,6 @@ public class WebController {
             return "redirect:/cart";
         }
 
-        // Create order from cart items
         Order order = new Order();
         order.setUser(currentUser);
         order.setStatus("PLACED");
@@ -187,16 +196,13 @@ public class WebController {
 
         order.setOrderItems(orderItems);
 
-        // Calculate total
         BigDecimal total = orderItems.stream()
                 .map(oi -> oi.getPrice().multiply(BigDecimal.valueOf(oi.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalAmount(total);
 
-        // Save order
         Order savedOrder = orderService.placeOrder(order, currentUser);
 
-        // Clear cart after order is placed
         cartItems.forEach(cart -> cartService.removeFromCart(cart.getId()));
 
         redirectAttributes.addFlashAttribute("success", "Order placed successfully! Order ID: " + savedOrder.getId());

@@ -1,10 +1,11 @@
 package com.pickncart.service;
 
-import org.springframework.stereotype.Service;
-import com.pickncart.repository.ItemRepository;
-import com.pickncart.repository.CategoryRepository;
-import com.pickncart.model.Item;
 import com.pickncart.model.Category;
+import com.pickncart.model.Item;
+import com.pickncart.repository.CategoryRepository;
+import com.pickncart.repository.ItemRepository;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -45,5 +46,9 @@ public class ItemService {
 
     public List<Item> getItemsByCategory(Long id) {
         return itemRepository.findByCategoryId(id);
+    }
+
+    public void deleteById(Long id) {
+        itemRepository.deleteById(id);
     }
 }

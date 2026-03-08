@@ -1,10 +1,11 @@
 package com.pickncart.service;
 
-import org.springframework.stereotype.Service;
-import com.pickncart.repository.OrderRepository;
 import com.pickncart.model.Order;
 import com.pickncart.model.OrderItem;
 import com.pickncart.model.User;
+import com.pickncart.repository.OrderRepository;
+import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -82,5 +83,13 @@ public class OrderService {
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
+    }
+
+    public Optional<Order> getById(Long id) {
+        return orderRepository.findById(id);
+    }
+
+    public Order save(Order order) {
+        return orderRepository.save(order);
     }
 }

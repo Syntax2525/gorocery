@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - PicknCart</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand"><a th:href="@{/}">PicknCart</a></div>
+            <ul class="nav-menu">
+                <li><a th:href="@{/admin/dashboard}">Dashboard</a></li>
+                <li><a th:href="@{/admin/categories}">Categories</a></li>
+                <li><a th:href="@{/admin/products}">Products</a></li>
+                <li><a th:href="@{/admin/orders}">Orders</a></li>
+                <li><a th:href="@{/admin/users}">Users</a></li>
+                <li>
+                    <form th:action="@{/logout}" method="post" style="display:inline;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn-link">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<main class="container">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <section class="hero">
+        <h1>Admin Dashboard</h1>
+        <p>Manage products, categories, orders and users.</p>
+    </section>
+
+    <section class="products">
+        <h2>Overview</h2>
+        <div class="product-grid">
+            <div class="product-card"><div class="product-info"><h3>Total Users</h3><p class="product-price" th:text="${totalUsers}">0</p></div></div>
+            <div class="product-card"><div class="product-info"><h3>Total Products</h3><p class="product-price" th:text="${totalProducts}">0</p></div></div>
+            <div class="product-card"><div class="product-info"><h3>Total Orders</h3><p class="product-price" th:text="${totalOrders}">0</p></div></div>
+        </div>
+    </section>
+
+    <section class="products">
+        <h2>Admin Tasks</h2>
+        <div class="product-grid">
+            <div class="product-card"><div class="product-info"><h3>Category Management</h3><p>Create/update/delete categories.</p><a class="btn btn-primary" th:href="@{/admin/categories}">Open</a></div></div>
+            <div class="product-card"><div class="product-info"><h3>Product Management</h3><p>Create/update/delete products.</p><a class="btn btn-primary" th:href="@{/admin/products}">Open</a></div></div>
+            <div class="product-card"><div class="product-info"><h3>Order Management</h3><p>Update order statuses.</p><a class="btn btn-primary" th:href="@{/admin/orders}">Open</a></div></div>
+            <div class="product-card"><div class="product-info"><h3>User Management</h3><p>Change user roles securely.</p><a class="btn btn-primary" th:href="@{/admin/users}">Open</a></div></div>
+        </div>
+    </section>
+</main>
+
+<footer><div class="container"><p>&copy; 2026 PicknCart - Dar es Salaam, Tanzania</p></div></footer>
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>
