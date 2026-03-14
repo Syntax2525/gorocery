@@ -4,6 +4,8 @@ import com.pickncart.model.Category;
 import com.pickncart.model.Item;
 import com.pickncart.model.Order;
 import com.pickncart.model.User;
+import com.pickncart.repository.CartRepository;
+import com.pickncart.repository.OrderItemRepository;
 import com.pickncart.service.CategoryService;
 import com.pickncart.service.ItemService;
 import com.pickncart.service.OrderService;
@@ -42,15 +44,21 @@ public class AdminController {
     private final ItemService itemService;
     private final OrderService orderService;
     private final UserService userService;
+    private final OrderItemRepository orderItemRepository;
+    private final CartRepository cartRepository;
 
     public AdminController(CategoryService categoryService,
                            ItemService itemService,
                            OrderService orderService,
-                           UserService userService) {
+                           UserService userService,
+                           OrderItemRepository orderItemRepository,
+                           CartRepository cartRepository) {
         this.categoryService = categoryService;
         this.itemService = itemService;
         this.orderService = orderService;
         this.userService = userService;
+        this.orderItemRepository = orderItemRepository;
+        this.cartRepository = cartRepository;
     }
 
     @GetMapping("/categories")
@@ -93,6 +101,10 @@ public class AdminController {
     @PostMapping("/categories/{id}/delete")
     public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
+            if (!itemService.getItemsByCategory(id).isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Category cannot be deleted because it has products");
+                return "redirect:/admin/categories";
+            }
             categoryService.deleteById(id);
             redirectAttributes.addFlashAttribute("success", "Category deleted successfully");
         } catch (Exception ex) {
@@ -190,6 +202,15 @@ public class AdminController {
     @PostMapping("/products/{id}/delete")
     public String deleteProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
+            boolean inOrders = orderItemRepository.existsByItemId(id);
+            boolean inCarts = cartRepository.existsByItemId(id);
+            if (inOrders || inCarts) {
+                redirectAttributes.addFlashAttribute(
+                        "error",
+                        "Product cannot be deleted because it is referenced by existing orders or carts"
+                );
+                return "redirect:/admin/products";
+            }
             itemService.deleteById(id);
             redirectAttributes.addFlashAttribute("success", "Product deleted successfully");
         } catch (Exception ex) {
@@ -218,6 +239,17 @@ public class AdminController {
         order.setStatus(status);
         orderService.save(order);
         redirectAttributes.addFlashAttribute("success", "Order status updated");
+        return "redirect:/admin/orders";
+    }
+
+    @PostMapping("/orders/{id}/cancel-approve")
+    public String approveCancel(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        boolean ok = orderService.approveCancel(id);
+        if (!ok) {
+            redirectAttributes.addFlashAttribute("error", "Order not found");
+            return "redirect:/admin/orders";
+        }
+        redirectAttributes.addFlashAttribute("success", "Order cancelled and removed");
         return "redirect:/admin/orders";
     }
 

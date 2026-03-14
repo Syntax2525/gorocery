@@ -37,7 +37,20 @@
             <h2>My Profile</h2>
             <div class="profile-card">
                 <div sec:authorize="isAuthenticated()">
+                    <div style="margin-bottom:16px;">
+                        <img th:if="${user != null and user.profileImageUrl != null}" th:src="${user.profileImageUrl}"
+                             alt="Profile photo" style="width:120px;height:120px;border-radius:50%;object-fit:cover;">
+                        <div th:if="${user == null or user.profileImageUrl == null}" style="width:120px;height:120px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;">
+                            <span style="color:#6b7280;">No Photo</span>
+                        </div>
+                    </div>
+                    <p><strong>Name:</strong> <span th:text="${user != null ? user.firstName + ' ' + user.lastName : 'N/A'}">Name</span></p>
                     <p><strong>Email:</strong> <span sec:authentication="name">Email</span></p>
+                    <form th:action="@{/profile/photo}" method="post" enctype="multipart/form-data" style="margin-top:12px;">
+                        <input type="file" name="profileImage" accept="image/*" required>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn btn-primary" style="margin-top:8px;">Upload Photo</button>
+                    </form>
                 </div>
                 <div class="profile-actions">
                     <a th:href="@{/orders}" class="btn btn-primary">View Orders</a>
@@ -48,7 +61,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 PicknCart - Dar es Salaam, Tanzania</p>
+            <p>&copy; 2026 PicknCart</p>
         </div>
     </footer>
 

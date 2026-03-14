@@ -56,9 +56,15 @@
                             </div>
                         </div>
                         <div class="order-actions">
-                            <form th:action="@{/api/orders/reorder/{id}(id=${order.id})}" method="post" style="display: inline;">
+                            <form th:action="@{/orders/reorder/{id}(id=${order.id})}" method="post" style="display: inline;">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                 <button type="submit" class="btn btn-secondary">Reorder</button>
+                            </form>
+                            <form th:if="${order.status != 'CANCEL_REQUESTED' and order.status != 'CANCELLED'}"
+                                  th:action="@{/orders/{id}/cancel-request(id=${order.id})}"
+                                  method="post" style="display: inline;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <button type="submit" class="btn btn-secondary">Request Cancel</button>
                             </form>
                         </div>
                     </div>
@@ -73,7 +79,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 PicknCart - Dar es Salaam, Tanzania</p>
+            <p>&copy; 2026 PicknCart</p>
         </div>
     </footer>
 

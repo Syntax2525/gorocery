@@ -10,7 +10,7 @@ public class PickncartApplication {
         SpringApplication.run(PickncartApplication.class, args);
         
         
-        System.out.println("connected successifully");
+        System.out.println("Database connected successifully");
     }
 
 }

@@ -49,9 +49,22 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             .csrf(csrf -> csrf
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                .ignoringRequestMatchers("/admin/products/**")
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                .requestMatchers(
+                        "/",
+                        "/login",
+                        "/register",
+                        "/categories",
+                        "/category/**",
+                        "/cart",
+                        "/checkout",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**",
+                        "/uploads/**"
+                ).permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

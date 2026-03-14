@@ -34,13 +34,13 @@ public class Cart {
 		this.user = user;
 	}
 
-	public Item getItem() {
-		return item;
-	}
+    public Item getItem() {
+        return item;
+    }
 
-	public void setItem(Item item) {
-		this.item = item;
-	}
+    public void setItem(Item item) {
+        this.item = item;
+    }
 
 	private int quantity;
 

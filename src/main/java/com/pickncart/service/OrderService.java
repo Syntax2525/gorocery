@@ -92,4 +92,30 @@ public class OrderService {
     public Order save(Order order) {
         return orderRepository.save(order);
     }
+
+    public boolean requestCancel(Long orderId, User user) {
+        Optional<Order> existing = orderRepository.findById(orderId);
+        if (existing.isEmpty()) {
+            return false;
+        }
+        Order order = existing.get();
+        if (order.getUser() == null || !order.getUser().getId().equals(user.getId())) {
+            return false;
+        }
+        if ("CANCELLED".equals(order.getStatus())) {
+            return true;
+        }
+        order.setStatus("CANCEL_REQUESTED");
+        orderRepository.save(order);
+        return true;
+    }
+
+    public boolean approveCancel(Long orderId) {
+        Optional<Order> existing = orderRepository.findById(orderId);
+        if (existing.isEmpty()) {
+            return false;
+        }
+        orderRepository.delete(existing.get());
+        return true;
+    }
 }

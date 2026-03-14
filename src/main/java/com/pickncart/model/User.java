@@ -28,6 +28,8 @@ public class User {
     @Column(nullable = false)
     private String role;  // CUSTOMER or ADMIN
 
+    private String profileImageUrl;
+
     // Constructors
     public User() {}
 
@@ -66,4 +68,8 @@ public class User {
     public String getRole() { return role; }
 
     public void setRole(String role) { this.role = role; }
+
+    public String getProfileImageUrl() { return profileImageUrl; }
+
+    public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
 }

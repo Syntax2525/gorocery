@@ -2,7 +2,10 @@ package com.pickncart.controller;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import com.pickncart.service.OrderService;
 import com.pickncart.service.UserService;
 import com.pickncart.model.Order;
@@ -31,6 +34,11 @@ public class OrderController {
         return null;
     }
 
+    private boolean isAdmin(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+    }
+
     @PostMapping("/create")
     public Order placeOrder(@RequestBody Order order) {
         User currentUser = getCurrentUser();
@@ -55,10 +63,20 @@ public class OrderController {
         if (currentUser == null) {
             return null;
         }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Optional<Order> existing = orderService.getById(id);
+        if (existing.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+        }
+        if (!isAdmin(authentication) && existing.get().getUser() != null
+                && !existing.get().getUser().getId().equals(currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot reorder another user's order");
+        }
         return orderService.reorder(id, currentUser);
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<Order> getAllOrders() {
         return orderService.getAllOrders();
     }

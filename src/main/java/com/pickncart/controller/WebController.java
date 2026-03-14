@@ -13,20 +13,30 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Controller
 public class WebController {
+
+    private static final Path PROFILE_UPLOAD_DIR = Paths.get("uploads", "profiles");
 
     private final ItemService itemService;
     private final CartService cartService;
@@ -84,7 +94,8 @@ public class WebController {
     }
 
     @GetMapping("/profile")
-    public String profile() {
+    public String profile(Model model) {
+        model.addAttribute("user", getCurrentUser());
         return "profile";
     }
 
@@ -207,5 +218,95 @@ public class WebController {
 
         redirectAttributes.addFlashAttribute("success", "Order placed successfully! Order ID: " + savedOrder.getId());
         return "redirect:/orders";
+    }
+
+    @PostMapping("/orders/reorder/{id}")
+    public String reorder(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Please login to reorder");
+            return "redirect:/login";
+        }
+
+        Order order = orderService.reorder(id, currentUser);
+        if (order == null) {
+            redirectAttributes.addFlashAttribute("error", "Order not found");
+            return "redirect:/orders";
+        }
+
+        redirectAttributes.addFlashAttribute("success", "Order placed successfully! Order ID: " + order.getId());
+        return "redirect:/orders";
+    }
+
+    @PostMapping("/orders/{id}/cancel-request")
+    public String requestCancel(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        return handleCancelRequest(id, redirectAttributes);
+    }
+
+    @PostMapping("/orders/cancel-request")
+    public String requestCancelFallback(@RequestParam Long id, RedirectAttributes redirectAttributes) {
+        return handleCancelRequest(id, redirectAttributes);
+    }
+
+    private String handleCancelRequest(Long id, RedirectAttributes redirectAttributes) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Please login to request cancellation");
+            return "redirect:/login";
+        }
+
+        boolean ok = orderService.requestCancel(id, currentUser);
+        if (!ok) {
+            redirectAttributes.addFlashAttribute("error", "Unable to request cancellation for this order");
+            return "redirect:/orders";
+        }
+
+        redirectAttributes.addFlashAttribute("success", "Cancellation request sent. Waiting for admin approval.");
+        return "redirect:/orders";
+    }
+
+    @PostMapping("/profile/photo")
+    public String updateProfilePhoto(@RequestParam("profileImage") MultipartFile profileImage,
+                                     RedirectAttributes redirectAttributes) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Please login to update your profile photo");
+            return "redirect:/login";
+        }
+
+        if (profileImage == null || profileImage.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Please choose an image to upload");
+            return "redirect:/profile";
+        }
+
+        try {
+            String imageUrl = storeProfileImage(profileImage);
+            currentUser.setProfileImageUrl(imageUrl);
+            userService.save(currentUser);
+            redirectAttributes.addFlashAttribute("success", "Profile photo updated");
+        } catch (IllegalArgumentException | IOException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+
+        return "redirect:/profile";
+    }
+
+    private String storeProfileImage(MultipartFile file) throws IOException {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Only image files are allowed");
+        }
+
+        Files.createDirectories(PROFILE_UPLOAD_DIR);
+
+        String originalFilename = file.getOriginalFilename();
+        String extension = StringUtils.getFilenameExtension(originalFilename);
+        String safeExtension = StringUtils.hasText(extension) ? "." + extension.toLowerCase() : ".jpg";
+
+        String fileName = "profile_" + UUID.randomUUID() + safeExtension;
+        Path targetPath = PROFILE_UPLOAD_DIR.resolve(fileName).normalize();
+
+        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+        return "/uploads/profiles/" + fileName;
     }
 }
