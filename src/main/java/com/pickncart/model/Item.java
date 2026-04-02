@@ -85,6 +85,4 @@ public class Item {
 		this.category = category;
 	}
 
-    
-    
 }

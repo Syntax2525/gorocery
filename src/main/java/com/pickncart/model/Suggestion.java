@@ -55,5 +55,5 @@ public class Suggestion {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
+
 }

@@ -54,5 +54,4 @@ public class Cart {
 
     public Cart() {}
 
-    // Getters and Setters
 }
