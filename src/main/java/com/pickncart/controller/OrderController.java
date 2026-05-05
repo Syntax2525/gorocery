@@ -10,6 +10,7 @@ import com.pickncart.service.OrderService;
 import com.pickncart.service.UserService;
 import com.pickncart.model.Order;
 import com.pickncart.model.User;
+import com.pickncart.util.RoleUtils;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,16 +35,14 @@ public class OrderController {
         return null;
     }
 
-    private boolean isAdmin(Authentication authentication) {
-        return authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
-    }
-
     @PostMapping("/create")
     public Order placeOrder(@RequestBody Order order) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        if (RoleUtils.isAdmin(currentUser)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admins cannot place customer orders");
         }
         return orderService.placeOrder(order, currentUser);
     }
@@ -61,14 +60,16 @@ public class OrderController {
     public Order reorder(@PathVariable Long id) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Optional<Order> existing = orderService.getById(id);
         if (existing.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
         }
-        if (!isAdmin(authentication) && existing.get().getUser() != null
+        if (RoleUtils.isAdmin(currentUser)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admins cannot place customer orders");
+        }
+        if (existing.get().getUser() != null
                 && !existing.get().getUser().getId().equals(currentUser.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot reorder another user's order");
         }
@@ -79,5 +80,18 @@ public class OrderController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<Order> getAllOrders() {
         return orderService.getAllOrders();
+    }
+
+    @GetMapping("/{id}")
+    public Order getById(@PathVariable Long id) {
+        return orderService.getById(id).orElse(null);
+    }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Order updateStatus(@PathVariable Long id, @RequestParam String status) {
+        Order order = orderService.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        order.setStatus(status);
+        return orderService.save(order);
     }
 }

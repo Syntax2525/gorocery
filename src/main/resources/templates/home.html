@@ -1,77 +1,95 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>PicknCart - Modern Tanzanian Shopping</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/style/layout.css"/>
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <a th:href="@{/}">PicknCart</a>
-                </div>
-                <ul class="nav-menu">
-                    <li><a th:href="@{/}">Home</a></li>
-                    <li><a th:href="@{/categories}">Categories</a></li>
-                    <li><a th:href="@{/cart}">Cart</a></li>
-                    <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/orders}">Orders</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/profile}">Profile</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/login}">Login</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/register}">Register</a></li>
-                    <li sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" style="display: inline;">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button type="submit" class="btn-link">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+  <header class="fixed top-0 w-full z-50 bg-white-80 backdrop-blur-md border-b border-gray-200 shadow-0_4px_20px_rgba_0_0_0_0_05">
+    <div class="flex justify-between items-center px-4 md-px-8 py-3 max-w-7xl mx-auto">
+      <div class="flex items-center gap-8">
+        <span class="text-2xl font-black text-teal-700 tracking-tight">PicknCart</span>
+        <nav class="hidden md-flex gap-6 items-center">
+          <a class="text-teal-700 font-bold border-b-2 border-orange-500 transition-colors" href="/">Home</a>
+          <a class="text-gray-600 hover-text-teal-600 transition-colors" href="/categories">Categories</a>
         </nav>
-    </header>
-
-    <main class="container">
-        <section class="hero">
-            <h1>Welcome to PicknCart</h1>
-            <p>Your one-stop shop for all your needs in Dar es Salaam</p>
-        </section>
-
-        <section class="products">
-            <h2>Featured Products</h2>
-            <div class="product-grid" th:if="${products != null and !products.isEmpty()}">
-                <div class="product-card" th:each="product : ${products}">
-                    <img th:src="${product.imageUrl != null ? product.imageUrl : '/images/placeholder.jpg'}" 
-                         th:alt="${product.name}" class="product-image">
-                    <div class="product-info">
-                        <h3 th:text="${product.name}">Product Name</h3>
-                        <p class="product-description" th:text="${product.description}">Description</p>
-                        <p class="product-price" th:text="${'TZS ' + #numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT')}">Price</p>
-                        <div class="product-actions">
-                            <form th:action="@{/cart/add}" method="post" style="display: inline;">
-                                <input type="hidden" name="itemId" th:value="${product.id}">
-                                <input type="hidden" name="quantity" value="1">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                                <button type="submit" class="btn btn-primary">Add to Cart</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <p th:if="${products == null or products.isEmpty()}">No products available at the moment.</p>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 PicknCart</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="relative hidden sm-block">
+          <span class="material-symbols-outlined absolute left-3 top-1-2 -translate-y-1-2 text-gray-400">search</span>
+          <input class="bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus-ring-2 focus-ring-primary-container w-64" placeholder="Search items..." type="text" id="searchInput"/>
         </div>
-    </footer>
+        <div class="flex items-center gap-3">
+          <a href="/cart" class="p-2 text-gray-600 hover-text-teal-600 transition-colors active-scale-95 transition-transform"><span class="material-symbols-outlined">shopping_cart</span></a>
+          <a href="/orders" class="p-2 text-gray-600 hover-text-teal-600 transition-colors active-scale-95 transition-transform"><span class="material-symbols-outlined">notifications</span></a>
+          <a href="/profile" class="p-2 text-gray-600 hover-text-teal-600 transition-colors active-scale-95 transition-transform"><span class="material-symbols-outlined">person</span></a>
+        </div>
+      </div>
+    </div>
+  </header>
 
-    <script th:src="@{/js/script.js}"></script>
+  <main class="pt-20">
+    <section class="hero-section">
+      <h1>Experience Modern Shopping in Tanzania</h1>
+      <p>Secure, fast, and local. Join thousands of shoppers in the digital heart of Dar es Salaam.</p>
+      <a class="hero-btn" href="/categories">Browse Categories</a>
+    </section>
+
+    <div th:if="${success}" class="flash-msg flash-success" th:text="${success}"></div>
+    <div th:if="${error}" class="flash-msg flash-error" th:text="${error}"></div>
+
+    <section class="category-section">
+      <h2 class="section-title">Shop by Category</h2>
+      <div class="categories-grid">
+        <a class="category-card" th:each="cat : ${categories}" th:href="@{/category/{id}(id=${cat.id})}">
+          <h3 th:text="${cat.name}">Category</h3>
+          <span th:text="${cat.description != null ? cat.description : 'Shop Now'}">Description</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="featured-section">
+      <h2 class="section-title">Featured Products</h2>
+      <div class="products-grid">
+        <div class="product-card" th:each="product : ${products}">
+          <img class="product-img" th:src="${product.imageUrl != null ? product.imageUrl : 'https://via.placeholder.com/300x220?text=No+Image'}" th:alt="${product.name}" src="https://via.placeholder.com/300x220?text=No+Image"/>
+          <div class="product-info">
+            <h3 th:text="${product.name}">Product Name</h3>
+            <p class="price">TSh <span th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')}">0</span></p>
+            <p class="stock" th:text="${product.stock > 0 ? product.stock + ' in stock' : 'Out of stock'}">Stock</p>
+            <form th:action="@{/cart/add}" method="post" th:if="${product.stock > 0}">
+              <input type="hidden" name="itemId" th:value="${product.id}"/>
+              <input type="hidden" name="quantity" value="1"/>
+              <button class="add-cart-btn" type="submit">Add to Cart</button>
+            </form>
+          </div>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(products)}">
+          <span class="material-symbols-outlined empty-state-icon">shopping_bag</span>
+          <p class="empty-state-copy">No products available yet</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="w-full rounded-t-3xl bg-gray-100 border-t border-gray-200">
+    <div class="flex flex-col md-flex-row justify-between items-center px-8 py-12 gap-6 max-w-7xl mx-auto">
+      <div class="flex flex-col gap-4 text-center md-text-left">
+        <span class="font-bold text-gray-900 text-xl">PicknCart</span>
+        <p class="font-Inter text-xs uppercase tracking-wider text-gray-500 max-w-xs">&copy; 2024 PicknCart Tanzania. All payments secured by M-Pesa &amp; Tigo Pesa.</p>
+      </div>
+      <div class="flex flex-wrap justify-center gap-8">
+        <a class="font-Inter text-xs uppercase tracking-wider text-gray-500 hover-text-teal-600 transition-colors" href="/categories">Categories</a>
+        <a class="font-Inter text-xs uppercase tracking-wider text-gray-500 hover-text-teal-600 transition-colors" href="/cart">Cart</a>
+        <a class="font-Inter text-xs uppercase tracking-wider text-gray-500 hover-text-teal-600 transition-colors" href="/orders">Orders</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/home.js"></script>
 </body>
 </html>
-
-

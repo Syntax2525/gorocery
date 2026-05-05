@@ -51,4 +51,29 @@ public class ItemService {
     public void deleteById(Long id) {
         itemRepository.deleteById(id);
     }
+
+    public Item update(Long id, Item updatedItem) {
+        Item existingItem = itemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+
+        existingItem.setName(updatedItem.getName());
+        existingItem.setDescription(updatedItem.getDescription());
+        existingItem.setPrice(updatedItem.getPrice());
+        existingItem.setStock(updatedItem.getStock());
+        existingItem.setImageUrl(updatedItem.getImageUrl());
+
+        if (updatedItem.getCategory() != null) {
+            existingItem.setCategory(updatedItem.getCategory());
+        }
+
+        return itemRepository.save(existingItem);
+    }
+
+    public List<Item> getInStockItems() {
+        return itemRepository.findByStockGreaterThan(0);
+    }
+
+    public List<Item> getInStockItemsByCategory(Long categoryId) {
+        return itemRepository.findByCategoryIdAndStockGreaterThan(categoryId, 0);
+    }
 }

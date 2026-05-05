@@ -1,50 +1,170 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Orders - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Management | PicknCart Admin</title>
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/style/admin.css"/>
 </head>
 <body>
-<main class="container">
-    <h1>Manage Orders</h1>
-    <p><a th:href="@{/admin/dashboard}">Back to Dashboard</a></p>
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+<input class="sidebar-toggle" id="sidebarToggle" type="checkbox"/>
+<label class="sidebar-scrim" for="sidebarToggle" aria-hidden="true"></label>
 
-    <section class="products">
-        <h2>All Orders</h2>
-        <div class="product-grid" th:if="${orders != null and !orders.isEmpty()}">
-            <div class="product-card" th:each="order : ${orders}">
-                <div class="product-info">
-                    <h3 th:text="${'Order #' + order.id}">Order</h3>
-                    <p th:text="${'User: ' + (order.user != null ? order.user.email : 'N/A')}"></p>
-                    <p th:text="${'Total: TZS ' + order.totalAmount}"></p>
-                    <p th:text="${'Created: ' + order.createdAt}"></p>
-                    <form th:action="@{'/admin/orders/' + ${order.id} + '/status'}" method="post">
-                        <select name="status" required>
-                            <option value="PLACED" th:selected="${order.status == 'PLACED'}">PLACED</option>
-                            <option value="PROCESSING" th:selected="${order.status == 'PROCESSING'}">PROCESSING</option>
-                            <option value="SHIPPED" th:selected="${order.status == 'SHIPPED'}">SHIPPED</option>
-                            <option value="DELIVERED" th:selected="${order.status == 'DELIVERED'}">DELIVERED</option>
-                            <option value="CANCEL_REQUESTED" th:selected="${order.status == 'CANCEL_REQUESTED'}">CANCEL_REQUESTED</option>
-                            <option value="CANCELLED" th:selected="${order.status == 'CANCELLED'}">CANCELLED</option>
-                        </select>
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <button class="btn btn-primary" type="submit">Update Status</button>
-                    </form>
-                    <form th:if="${order.status == 'CANCEL_REQUESTED'}"
-                          th:action="@{'/admin/orders/' + ${order.id} + '/cancel-approve'}"
-                          method="post" style="margin-top:10px;">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <button class="btn" type="submit">Approve Cancel & Remove</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <p th:if="${orders == null or orders.isEmpty()}">No orders found.</p>
+<aside class="admin-sidebar" aria-label="Admin navigation">
+  <div class="sidebar-brand">
+    <div class="brand-mark">P</div>
+    <div>
+      <h1>PicknCart</h1>
+      <p>Merchant Admin</p>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="/admin/dashboard"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span></a>
+    <a class="nav-item" href="/admin/products"><span class="material-symbols-outlined" aria-hidden="true">inventory_2</span><span>Products</span></a>
+    <a class="nav-item active" href="/admin/orders" aria-current="page"><span class="material-symbols-outlined" aria-hidden="true">receipt_long</span><span>Orders</span></a>
+    <a class="nav-item" href="/admin/users"><span class="material-symbols-outlined" aria-hidden="true">group</span><span>Users</span></a>
+    <a class="nav-item" href="/admin/categories"><span class="material-symbols-outlined" aria-hidden="true">category</span><span>Categories</span></a>
+  </nav>
+  <div class="sidebar-account">
+    <div class="account-avatar">A</div>
+    <div>
+      <p>Admin</p>
+      <span>Merchant Store</span>
+    </div>
+  </div>
+</aside>
+
+<div class="admin-shell">
+  <header class="topbar">
+    <label class="mobile-menu-button" for="sidebarToggle" aria-label="Open navigation">
+      <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+    </label>
+    <div>
+      <p class="eyebrow">Orders</p>
+      <h1>Order Management</h1>
+    </div>
+    <div class="topbar-actions">
+      <label class="secondary-action" for="sidebarToggle">
+        <span class="material-symbols-outlined" aria-hidden="true">left_panel_close</span>
+        <span>Sidebar</span>
+      </label>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div th:if="${success}" class="flash-msg flash-success" th:text="${success}"></div>
+    <div th:if="${error}" class="flash-msg flash-error" th:text="${error}"></div>
+
+    <section class="page-intro">
+      <div>
+        <h2 class="page-title">Order Management</h2>
+        <p>Monitor fulfillment, customer details, payment totals, and cancellation requests without wasted space.</p>
+      </div>
     </section>
-</main>
+
+    <section class="content-card" aria-label="Orders table">
+      <div class="table-wrap">
+        <table class="admin-table">
+          <colgroup>
+            <col style="width: 13%"/>
+            <col style="width: 28%"/>
+            <col style="width: 14%"/>
+            <col style="width: 14%"/>
+            <col style="width: 14%"/>
+            <col style="width: 17%"/>
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th class="text-right">Amount</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="order : ${orders}">
+              <td><strong th:text="'#PC-' + ${order.id}">#PC-0</strong></td>
+              <td>
+                <div class="cell-main">
+                  <div class="avatar" th:text="${order.user != null ? order.user.initial : 'U'}">U</div>
+                  <div>
+                    <p class="cell-title" th:text="${order.user != null ? order.user.getFullName() : 'N/A'}">Customer</p>
+                    <p class="cell-subtitle" th:text="${order.phone != null ? order.phone : ''}">Phone</p>
+                  </div>
+                </div>
+              </td>
+              <td th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'MMM dd, yyyy') : 'N/A'}">Date</td>
+              <td>
+                <span class="status-pill" th:classappend="${'status-' + #strings.toLowerCase(order.status != null ? order.status : 'placed')}" th:text="${order.status != null ? order.status : 'PLACED'}">Status</span>
+              </td>
+              <td class="text-right"><strong>TSh <span th:text="${#numbers.formatDecimal(order.totalAmount != null ? order.totalAmount : 0, 0, 'COMMA', 0, 'POINT')}">0</span></strong></td>
+              <td class="text-right">
+                <div class="actions-row">
+                  <button class="text-action" th:attr="data-id=${order.id}, data-user=${order.user != null ? order.user.getFullName() : 'N/A'}, data-email=${order.user != null ? order.user.email : ''}, data-phone=${order.phone}, data-address=${order.address}, data-total=${order.totalAmount}, data-payment=${order.paymentMethod}" data-order-detail type="button">View</button>
+                  <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post" th:if="${order.status == 'PLACED' || order.status == 'SHIPPED'}">
+                    <input name="status" type="hidden" th:value="${order.status == 'PLACED' ? 'SHIPPED' : 'DELIVERED'}"/>
+                    <button class="text-action blue" type="submit" th:text="${order.status == 'PLACED' ? 'Ship' : 'Deliver'}">Ship</button>
+                  </form>
+                  <form th:action="@{/admin/orders/{id}/cancel-approve(id=${order.id})}" method="post" th:if="${order.status == 'CANCEL_REQUESTED'}">
+                    <button class="text-action danger" type="submit">Approve</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${orders.isEmpty()}">
+              <td class="empty-state" colspan="6">No orders yet</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <strong>PicknCart Tanzania</strong>
+    <nav aria-label="Footer navigation">
+      <a href="/">Home</a>
+      <a href="/categories">Categories</a>
+    </nav>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-content wide">
+    <div class="section-header">
+      <h3 id="modalTitle">Order Details</h3>
+      <button class="modal-icon-button material-symbols-outlined" data-close-modal="detailModal" type="button" aria-label="Close">close</button>
+    </div>
+    <div class="detail-grid">
+      <div class="info-panel">
+        <p class="eyebrow">Customer Info</p>
+        <p><strong id="modalUser">User</strong></p>
+        <p id="modalEmail">Email</p>
+        <p id="modalPhone">Phone</p>
+        <div class="info-panel" id="modalAddressBlock">
+          <p class="eyebrow">Delivery Address</p>
+          <p id="modalAddress">Address</p>
+        </div>
+      </div>
+      <div class="info-panel">
+        <p class="eyebrow">Payment</p>
+        <p><strong id="modalPayment">Payment</strong></p>
+        <p>PicknCart Order</p>
+        <div class="total-row">
+          <span>Total</span>
+          <span id="modalTotal">TSh 0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin-orders.js"></script>
 </body>
 </html>

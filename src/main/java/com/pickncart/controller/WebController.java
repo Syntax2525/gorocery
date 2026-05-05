@@ -6,19 +6,17 @@ import com.pickncart.model.Order;
 import com.pickncart.model.OrderItem;
 import com.pickncart.model.User;
 import com.pickncart.service.CartService;
+import com.pickncart.service.DeliveryFeeService;
 import com.pickncart.service.ItemService;
 import com.pickncart.service.OrderService;
 import com.pickncart.service.UserService;
-import org.springframework.security.access.prepost.PreAuthorize;
+import com.pickncart.util.RoleUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -40,12 +38,18 @@ public class WebController {
 
     private final ItemService itemService;
     private final CartService cartService;
+    private final DeliveryFeeService deliveryFeeService;
     private final OrderService orderService;
     private final UserService userService;
 
-    public WebController(ItemService itemService, CartService cartService, OrderService orderService, UserService userService) {
+    public WebController(ItemService itemService,
+                         CartService cartService,
+                         DeliveryFeeService deliveryFeeService,
+                         OrderService orderService,
+                         UserService userService) {
         this.itemService = itemService;
         this.cartService = cartService;
+        this.deliveryFeeService = deliveryFeeService;
         this.orderService = orderService;
         this.userService = userService;
     }
@@ -61,41 +65,57 @@ public class WebController {
 
     @GetMapping("/")
     public String home(Model model) {
-        List<Item> products = itemService.getAll();
+        List<Item> products = itemService.getInStockItems();
         model.addAttribute("products", products);
+        model.addAttribute("categories", itemService.getAllCategories());
+        model.addAttribute("currentUser", getCurrentUser());
         return "home";
     }
 
     @GetMapping("/login")
-    public String login() {
+    public String login(@RequestParam(value = "error", required = false) String error,
+                        @RequestParam(value = "logout", required = false) String logout,
+                        Model model) {
+        if (error != null) {
+            model.addAttribute("error", "Invalid email or password");
+        }
+        if (logout != null) {
+            model.addAttribute("success", "You have been logged out");
+        }
         return "login";
-    }
-
-    @GetMapping("/admin/dashboard")
-    @PreAuthorize("hasRole('ADMIN')")
-    public String adminDashboard(Model model) {
-        model.addAttribute("totalUsers", userService.getAllUsers().size());
-        model.addAttribute("totalProducts", itemService.getAll().size());
-        model.addAttribute("totalOrders", orderService.getAllOrders().size());
-        return "admin-dashboard";
     }
 
     @GetMapping("/cart")
     public String cart(Model model) {
         User currentUser = getCurrentUser();
         if (currentUser != null) {
-            model.addAttribute("cartItems", cartService.getCartItems(currentUser));
-            model.addAttribute("total", cartService.getTotal(currentUser));
+            List<Cart> cartItems = cartService.getCartItems(currentUser);
+            BigDecimal subtotal = cartSubtotal(cartItems);
+            BigDecimal deliveryFee = deliveryFeeService.calculateForCart(cartItems, currentUser.getDistrict());
+            model.addAttribute("cartItems", cartItems);
+            model.addAttribute("total", subtotal);
+            model.addAttribute("deliveryFee", deliveryFee);
+            model.addAttribute("grandTotal", subtotal.add(deliveryFee));
         } else {
             model.addAttribute("cartItems", List.of());
-            model.addAttribute("total", 0.0);
+            model.addAttribute("total", BigDecimal.ZERO);
+            model.addAttribute("deliveryFee", BigDecimal.ZERO);
+            model.addAttribute("grandTotal", BigDecimal.ZERO);
         }
+        model.addAttribute("currentUser", getCurrentUser());
         return "cart";
     }
 
     @GetMapping("/profile")
     public String profile(Model model) {
-        model.addAttribute("user", getCurrentUser());
+        User currentUser = getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("user", currentUser);
+            List<Order> userOrders = orderService.getUserOrders(currentUser);
+            if (!userOrders.isEmpty()) {
+                model.addAttribute("lastOrder", userOrders.get(0));
+            }
+        }
         return "profile";
     }
 
@@ -107,32 +127,48 @@ public class WebController {
         } else {
             model.addAttribute("orders", List.of());
         }
+        model.addAttribute("currentUser", getCurrentUser());
         return "orders";
     }
 
     @GetMapping("/checkout")
     public String checkout(Model model) {
         User currentUser = getCurrentUser();
-        if (currentUser != null) {
-            model.addAttribute("cartItems", cartService.getCartItems(currentUser));
-            model.addAttribute("total", cartService.getTotal(currentUser));
-        } else {
-            model.addAttribute("cartItems", List.of());
-            model.addAttribute("total", 0.0);
+        if (currentUser == null) {
+            return "redirect:/login";
         }
+        if (RoleUtils.isAdmin(currentUser)) {
+            return "redirect:/admin/dashboard";
+        }
+        List<Cart> cartItems = cartService.getCartItems(currentUser);
+        BigDecimal subtotal = cartSubtotal(cartItems);
+        BigDecimal deliveryFee = deliveryFeeService.calculateForCart(cartItems, currentUser.getDistrict());
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("total", subtotal);
+        model.addAttribute("deliveryFee", deliveryFee);
+        model.addAttribute("grandTotal", subtotal.add(deliveryFee));
+        model.addAttribute("deliveryFeeOptions", deliveryFeeService.calculateDistrictOptionsForCart(cartItems));
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("user", currentUser);
         return "checkout";
     }
 
     @GetMapping("/categories")
     public String categories(Model model) {
         model.addAttribute("categories", itemService.getAllCategories());
+        model.addAttribute("currentUser", getCurrentUser());
         return "categories";
     }
 
     @GetMapping("/category/{id}")
     public String categoryItems(@PathVariable Long id, Model model) {
-        model.addAttribute("category", itemService.getCategoryById(id));
+        var category = itemService.getCategoryById(id);
+        if (category == null) {
+            return "redirect:/categories";
+        }
+        model.addAttribute("category", category);
         model.addAttribute("items", itemService.getItemsByCategory(id));
+        model.addAttribute("currentUser", getCurrentUser());
         return "category-items";
     }
 
@@ -145,6 +181,10 @@ public class WebController {
             redirectAttributes.addFlashAttribute("error", "Please login to add items to cart");
             return "redirect:/login";
         }
+        if (RoleUtils.isAdmin(currentUser)) {
+            redirectAttributes.addFlashAttribute("error", "Admins manage the store from the dashboard and cannot shop as customers");
+            return "redirect:/admin/dashboard";
+        }
 
         Optional<Item> itemOpt = itemService.getById(itemId);
         if (itemOpt.isEmpty()) {
@@ -152,13 +192,26 @@ public class WebController {
             return "redirect:/";
         }
 
-        Cart cart = new Cart();
-        cart.setUser(currentUser);
-        cart.setItem(itemOpt.get());
-        cart.setQuantity(quantity);
+        Item item = itemOpt.get();
+        if (item.getStock() < quantity) {
+            redirectAttributes.addFlashAttribute("error", "Insufficient stock");
+            return "redirect:/";
+        }
 
-        cartService.addToCart(cart);
+        cartService.addOrUpdateCart(currentUser, item, quantity);
         redirectAttributes.addFlashAttribute("success", "Item added to cart");
+        return "redirect:/cart";
+    }
+
+    @PostMapping("/cart/update/{id}")
+    public String updateCartQuantity(@PathVariable Long id,
+                                     @RequestParam int quantity,
+                                     RedirectAttributes redirectAttributes) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        cartService.updateQuantity(id, quantity);
         return "redirect:/cart";
     }
 
@@ -169,21 +222,26 @@ public class WebController {
             redirectAttributes.addFlashAttribute("error", "Please login");
             return "redirect:/login";
         }
-
         cartService.removeFromCart(id);
         redirectAttributes.addFlashAttribute("success", "Item removed from cart");
         return "redirect:/cart";
     }
 
     @PostMapping("/checkout")
-    public String processCheckout(@RequestParam String address,
+    public String processCheckout(@RequestParam String fullName,
                                   @RequestParam String phone,
+                                  @RequestParam String address,
+                                  @RequestParam String district,
                                   @RequestParam String paymentMethod,
                                   RedirectAttributes redirectAttributes) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             redirectAttributes.addFlashAttribute("error", "Please login to checkout");
             return "redirect:/login";
+        }
+        if (RoleUtils.isAdmin(currentUser)) {
+            redirectAttributes.addFlashAttribute("error", "Admins cannot place customer orders");
+            return "redirect:/admin/dashboard";
         }
 
         List<Cart> cartItems = cartService.getCartItems(currentUser);
@@ -195,6 +253,10 @@ public class WebController {
         Order order = new Order();
         order.setUser(currentUser);
         order.setStatus("PLACED");
+        order.setAddress(address);
+        order.setPhone(phone);
+        order.setDeliveryDistrict(district);
+        order.setPaymentMethod(paymentMethod);
 
         List<OrderItem> orderItems = cartItems.stream().map(cart -> {
             OrderItem orderItem = new OrderItem();
@@ -207,10 +269,13 @@ public class WebController {
 
         order.setOrderItems(orderItems);
 
-        BigDecimal total = orderItems.stream()
+        BigDecimal subtotal = orderItems.stream()
                 .map(oi -> oi.getPrice().multiply(BigDecimal.valueOf(oi.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        order.setTotalAmount(total);
+        BigDecimal deliveryFee = deliveryFeeService.calculateForCart(cartItems, district);
+        order.setSubtotalAmount(subtotal);
+        order.setDeliveryFee(deliveryFee);
+        order.setTotalAmount(subtotal.add(deliveryFee));
 
         Order savedOrder = orderService.placeOrder(order, currentUser);
 
@@ -227,6 +292,10 @@ public class WebController {
             redirectAttributes.addFlashAttribute("error", "Please login to reorder");
             return "redirect:/login";
         }
+        if (RoleUtils.isAdmin(currentUser)) {
+            redirectAttributes.addFlashAttribute("error", "Admins cannot place customer orders");
+            return "redirect:/admin/dashboard";
+        }
 
         Order order = orderService.reorder(id, currentUser);
         if (order == null) {
@@ -238,17 +307,8 @@ public class WebController {
         return "redirect:/orders";
     }
 
-    @PostMapping("/orders/{id}/cancel-request")
-    public String requestCancel(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        return handleCancelRequest(id, redirectAttributes);
-    }
-
     @PostMapping("/orders/cancel-request")
-    public String requestCancelFallback(@RequestParam Long id, RedirectAttributes redirectAttributes) {
-        return handleCancelRequest(id, redirectAttributes);
-    }
-
-    private String handleCancelRequest(Long id, RedirectAttributes redirectAttributes) {
+    public String requestCancel(@RequestParam Long id, RedirectAttributes redirectAttributes) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             redirectAttributes.addFlashAttribute("error", "Please login to request cancellation");
@@ -263,6 +323,61 @@ public class WebController {
 
         redirectAttributes.addFlashAttribute("success", "Cancellation request sent. Waiting for admin approval.");
         return "redirect:/orders";
+    }
+
+    @PostMapping("/profile/update")
+    public String updateProfile(@RequestParam String firstName,
+                                @RequestParam String lastName,
+                                @RequestParam(required = false) String phoneNumber,
+                                @RequestParam(required = false) String gender,
+                                @RequestParam(required = false) String street,
+                                @RequestParam(required = false) String district,
+                                RedirectAttributes redirectAttributes) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        currentUser.setFirstName(firstName);
+        currentUser.setLastName(lastName);
+        currentUser.setPhoneNumber(phoneNumber);
+        currentUser.setGender(gender);
+        currentUser.setStreet(street);
+        currentUser.setDistrict(district);
+
+        try {
+            userService.save(currentUser);
+            redirectAttributes.addFlashAttribute("success", "Profile updated successfully");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/profile";
+    }
+
+    @PostMapping("/profile/password")
+    public String updatePassword(@RequestParam String currentPassword,
+                                 @RequestParam String newPassword,
+                                 @RequestParam String confirmPassword,
+                                 RedirectAttributes redirectAttributes) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("error", "New passwords do not match");
+            return "redirect:/profile";
+        }
+
+        try {
+            userService.updatePassword(currentUser.getId(), currentPassword, newPassword);
+            redirectAttributes.addFlashAttribute("success", "Password updated successfully");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/profile";
     }
 
     @PostMapping("/profile/photo")
@@ -308,5 +423,15 @@ public class WebController {
 
         Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         return "/uploads/profiles/" + fileName;
+    }
+
+    private BigDecimal cartSubtotal(List<Cart> cartItems) {
+        if (cartItems == null) {
+            return BigDecimal.ZERO;
+        }
+        return cartItems.stream()
+                .filter(cart -> cart.getItem() != null && cart.getItem().getPrice() != null)
+                .map(cart -> cart.getItem().getPrice().multiply(BigDecimal.valueOf(cart.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

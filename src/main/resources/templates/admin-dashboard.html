@@ -1,63 +1,181 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Merchant Admin | PicknCart</title>
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/style/admin.css"/>
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand"><a th:href="@{/}">PicknCart</a></div>
-            <ul class="nav-menu">
-                <li><a th:href="@{/admin/dashboard}">Dashboard</a></li>
-                <li><a th:href="@{/admin/categories}">Categories</a></li>
-                <li><a th:href="@{/admin/products}">Products</a></li>
-                <li><a th:href="@{/admin/orders}">Orders</a></li>
-                <li><a th:href="@{/admin/users}">Users</a></li>
-                <li>
-                    <form th:action="@{/logout}" method="post" style="display:inline;">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <button type="submit" class="btn-link">Logout</button>
-                    </form>
-                </li>
-            </ul>
+<input class="sidebar-toggle" id="sidebarToggle" type="checkbox"/>
+<label class="sidebar-scrim" for="sidebarToggle" aria-hidden="true"></label>
+
+<aside class="admin-sidebar" aria-label="Admin navigation">
+  <div class="sidebar-brand">
+    <div class="brand-mark">P</div>
+    <div>
+      <h1>PicknCart</h1>
+      <p>Merchant Admin</p>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="/admin/dashboard" aria-current="page">
+      <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+      <span>Dashboard</span>
+    </a>
+    <a class="nav-item" href="/admin/products">
+      <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+      <span>Products</span>
+    </a>
+    <a class="nav-item" href="/admin/orders">
+      <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
+      <span>Orders</span>
+    </a>
+    <a class="nav-item" href="/admin/users">
+      <span class="material-symbols-outlined" aria-hidden="true">group</span>
+      <span>Users</span>
+    </a>
+    <a class="nav-item" href="/admin/categories">
+      <span class="material-symbols-outlined" aria-hidden="true">category</span>
+      <span>Categories</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-account">
+    <div class="account-avatar">A</div>
+    <div>
+      <p>Admin</p>
+      <span>Merchant Store</span>
+    </div>
+  </div>
+</aside>
+
+<div class="admin-shell">
+  <header class="topbar">
+    <label class="mobile-menu-button" for="sidebarToggle" aria-label="Open navigation">
+      <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+    </label>
+    <div>
+      <p class="eyebrow">Admin Dashboard</p>
+      <h1>Dashboard Overview</h1>
+    </div>
+    <div class="topbar-actions">
+      <label class="secondary-action" for="sidebarToggle">
+        <span class="material-symbols-outlined" aria-hidden="true">left_panel_close</span>
+        <span>Sidebar</span>
+      </label>
+      <a class="primary-action" href="/admin/orders">
+        <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+        <span>View Orders</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div th:if="${success}" class="flash-msg flash-success" th:text="${success}"></div>
+    <div th:if="${error}" class="flash-msg flash-error" th:text="${error}"></div>
+
+    <section class="summary-panel" aria-labelledby="summary-title">
+      <div>
+        <p class="eyebrow">Store Performance</p>
+        <h3 id="summary-title">Today at a glance</h3>
+      </div>
+      <p>Manage users, inventory, orders, and revenue from one focused workspace.</p>
+    </section>
+
+    <section class="stats-grid" aria-label="Dashboard statistics">
+      <article class="stat-card">
+        <div class="stat-icon icon-teal">
+          <span class="material-symbols-outlined" aria-hidden="true">group</span>
         </div>
+        <div class="stat-content">
+          <p>Total Users</p>
+          <strong th:text="${totalUsers}">0</strong>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon icon-blue">
+          <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+        </div>
+        <div class="stat-content">
+          <p>Total Products</p>
+          <strong th:text="${totalProducts}">0</strong>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon icon-amber">
+          <span class="material-symbols-outlined" aria-hidden="true">shopping_bag</span>
+        </div>
+        <div class="stat-content">
+          <p>Total Orders</p>
+          <strong th:text="${totalOrders}">0</strong>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon icon-green">
+          <span class="material-symbols-outlined" aria-hidden="true">payments</span>
+        </div>
+        <div class="stat-content">
+          <p>Delivered Revenue</p>
+          <strong>TSh <span th:text="${#numbers.formatDecimal(deliveredRevenue, 0, 'COMMA', 0, 'POINT')}">0</span></strong>
+        </div>
+      </article>
+    </section>
+
+    <section class="content-card recent-orders" aria-labelledby="recent-orders-title">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Latest Activity</p>
+          <h3 id="recent-orders-title">Recent Orders</h3>
+        </div>
+        <a class="secondary-action" href="/admin/orders">View all</a>
+      </div>
+
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Amount</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="order : ${orders}">
+              <td class="order-id" th:text="'#PC-' + ${order.id}">#PC-0</td>
+              <td th:text="${order.user != null ? order.user.getFullName() : 'N/A'}">Customer</td>
+              <td>
+                <span class="status-pill" th:classappend="${'status-' + #strings.toLowerCase(order.status != null ? order.status : 'placed')}" th:text="${order.status != null ? order.status : 'PLACED'}">Status</span>
+              </td>
+              <td>TSh <span th:text="${#numbers.formatDecimal(order.totalAmount != null ? order.totalAmount : 0, 0, 'COMMA', 0, 'POINT')}">0</span></td>
+              <td th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'MMM dd, yyyy') : 'N/A'}">Date</td>
+            </tr>
+            <tr th:if="${orders.isEmpty()}">
+              <td class="empty-state" colspan="5">No orders yet</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <strong>PicknCart Tanzania</strong>
+    <nav aria-label="Footer navigation">
+      <a href="/">Home</a>
+      <a href="/categories">Categories</a>
     </nav>
-</header>
-
-<main class="container">
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-
-    <section class="hero">
-        <h1>Admin Dashboard</h1>
-        <p>Manage products, categories, orders and users.</p>
-    </section>
-
-    <section class="products">
-        <h2>Overview</h2>
-        <div class="product-grid">
-            <div class="product-card"><div class="product-info"><h3>Total Users</h3><p class="product-price" th:text="${totalUsers}">0</p></div></div>
-            <div class="product-card"><div class="product-info"><h3>Total Products</h3><p class="product-price" th:text="${totalProducts}">0</p></div></div>
-            <div class="product-card"><div class="product-info"><h3>Total Orders</h3><p class="product-price" th:text="${totalOrders}">0</p></div></div>
-        </div>
-    </section>
-
-    <section class="products">
-        <h2>Admin Tasks</h2>
-        <div class="product-grid">
-            <div class="product-card"><div class="product-info"><h3>Category Management</h3><p>Create/update/delete categories.</p><a class="btn btn-primary" th:href="@{/admin/categories}">Open</a></div></div>
-            <div class="product-card"><div class="product-info"><h3>Product Management</h3><p>Create/update/delete products.</p><a class="btn btn-primary" th:href="@{/admin/products}">Open</a></div></div>
-            <div class="product-card"><div class="product-info"><h3>Order Management</h3><p>Update order statuses.</p><a class="btn btn-primary" th:href="@{/admin/orders}">Open</a></div></div>
-            <div class="product-card"><div class="product-info"><h3>User Management</h3><p>Change user roles securely.</p><a class="btn btn-primary" th:href="@{/admin/users}">Open</a></div></div>
-        </div>
-    </section>
-</main>
-
-<footer><div class="container"><p>&copy; 2026 PicknCart</p></div></footer>
-<script th:src="@{/js/script.js}"></script>
+  </footer>
+</div>
 </body>
 </html>

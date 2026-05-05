@@ -1,58 +1,79 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categories - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Categories - PicknCart Tanzania</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/style/categories.css"/>
 </head>
-<body>
-    <header>
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <a th:href="@{/}">PicknCart</a>
-                </div>
-                <ul class="nav-menu">
-                    <li><a th:href="@{/}">Home</a></li>
-                    <li><a th:href="@{/categories}">Categories</a></li>
-                    <li><a th:href="@{/cart}">Cart</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/orders}">Orders</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/profile}">Profile</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/login}">Login</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/register}">Register</a></li>
-                    <li sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" style="display: inline;">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button type="submit" class="btn-link">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container">
-        <section class="categories-section">
-            <h2>Product Categories</h2>
-            <div class="category-grid" th:if="${categories != null and !categories.isEmpty()}">
-                <div class="category-card" th:each="category : ${categories}">
-                    <a th:href="@{/category/{id}(id=${category.id})}">
-                        <h3 th:text="${category.name}">Category Name</h3>
-                        <p th:text="${category.description}" th:if="${category.description != null}">Description</p>
-                    </a>
-                </div>
-            </div>
-            <p th:if="${categories == null or categories.isEmpty()}">No categories available.</p>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 PicknCart</p>
+<body class="bg-background font-body-md text-on-background">
+  <header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+    <div class="flex justify-between items-center px-4 md-px-8 py-3 max-w-7xl mx-auto">
+      <div class="text-2xl font-black text-teal-700 tracking-tight">PicknCart</div>
+      <nav class="hidden md:flex items-center space-x-8">
+        <a class="text-gray-600 hover:text-teal-600 transition-colors" href="/">Home</a>
+        <a class="text-teal-700 font-bold border-b-2 border-orange-500" href="/categories">Categories</a>
+      </nav>
+      <div class="flex items-center gap-4">
+        <div class="hidden lg:flex relative items-center">
+          <span class="material-symbols-outlined absolute left-3 text-outline">search</span>
+          <input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-md w-64" placeholder="Search categories..." type="text"/>
         </div>
-    </footer>
+        <div class="flex gap-3 text-teal-700">
+          <a href="/cart" class="icon-link active-scale-95 transition-transform"><span class="material-symbols-outlined">shopping_cart</span></a>
+          <a href="/orders" class="icon-link active-scale-95 transition-transform"><span class="material-symbols-outlined">notifications</span></a>
+          <a href="/profile" class="icon-link active-scale-95 transition-transform"><span class="material-symbols-outlined">person</span></a>
+        </div>
+      </div>
+    </div>
+  </header>
 
-    <script th:src="@{/js/script.js}"></script>
+  <main class="pt-24 pb-16 px-margin max-w-7xl mx-auto">
+    <div th:if="${success}" class="flash-msg flash-success" th:text="${success}"></div>
+
+    <section class="mb-lg">
+      <h1 class="font-h1 text-h1 text-on-background mb-sm">Explore Categories</h1>
+      <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Discover the best of Tanzanian and international brands curated for your modern lifestyle.</p>
+    </section>
+
+    <section class="grid grid-cols-2 md-grid-cols-3 lg-grid-cols-4 gap-md">
+      <a class="group relative aspect-[4/5] rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] bg-surface-container-lowest transition-all hover:-translate-y-2 hover:shadow-xl cursor-pointer"
+         th:each="cat : ${categories}"
+         th:href="@{/category/{id}(id=${cat.id})}">
+        <img class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+             th:src="${cat.imageUrl != null ? cat.imageUrl : 'https://via.placeholder.com/400x500?text=' + cat.name}"
+             th:alt="${cat.name}"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 p-md w-full">
+          <p class="text-white/70 font-label-sm uppercase tracking-widest mb-xs" th:text="${cat.description != null ? cat.description : 'Shop Now'}">Description</p>
+          <h3 class="font-h3 text-h3 text-white" th:text="${cat.name}">Category</h3>
+          <div class="mt-sm flex items-center text-secondary-fixed font-label-md opacity-0 group-hover:opacity-100 transition-opacity">
+            Shop Now <span class="material-symbols-outlined ml-xs">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+      <div th:if="${#lists.isEmpty(categories)}" class="col-span-full text-center py-20 text-gray-500">
+        <span class="material-symbols-outlined empty-state-icon">category</span>
+        <p class="mt-4">No categories available yet</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-gray-100 w-full rounded-t-3xl border-t border-gray-200">
+    <div class="flex flex-col md-flex-row justify-between items-center px-8 py-12 gap-6 max-w-7xl mx-auto">
+      <div class="font-bold text-gray-900 text-lg">PicknCart</div>
+      <div class="flex gap-8">
+        <a class="text-gray-500 hover:text-teal-600 transition-colors" href="/">Home</a>
+        <a class="text-gray-500 hover:text-teal-600 transition-colors" href="/cart">Cart</a>
+        <a class="text-gray-500 hover:text-teal-600 transition-colors" href="/orders">Orders</a>
+      </div>
+    </div>
+  </footer>
+
+  <a class="fixed bottom-8 right-8 w-14 h-14 bg-secondary-container text-on-secondary-container rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-40 support-link" href="/orders">
+    <span class="material-symbols-outlined">support_agent</span>
+  </a>
 </body>
 </html>

@@ -1,88 +1,217 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order History | PicknCart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link href="/style/orders.css" rel="stylesheet"/>
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <a th:href="@{/}">PicknCart</a>
-                </div>
-                <ul class="nav-menu">
-                    <li><a th:href="@{/}">Home</a></li>
-                    <li><a th:href="@{/categories}">Categories</a></li>
-                    <li><a th:href="@{/cart}">Cart</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/orders}">Orders</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/profile}">Profile</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/login}">Login</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/register}">Register</a></li>
-                    <li sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" style="display: inline;">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button type="submit" class="btn-link">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </header>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand-logo" href="/">PicknCart</a>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/categories">Categories</a>
+        <a class="nav-link active" href="/orders" aria-current="page">My Orders</a>
+      </nav>
+      <div class="action-group">
+        <a href="/cart" class="icon-button" aria-label="Cart"><span class="material-symbols-outlined" aria-hidden="true">shopping_cart</span></a>
+        <a href="/orders" class="icon-button" aria-label="Orders"><span class="material-symbols-outlined" aria-hidden="true">receipt_long</span></a>
+        <a href="/profile" class="icon-button" aria-label="Profile"><span class="material-symbols-outlined" aria-hidden="true">person</span></a>
+      </div>
+    </div>
+  </header>
 
-    <main class="container">
-        <section class="orders-section">
-            <h2>My Orders</h2>
-            <div th:if="${orders != null and !orders.isEmpty()}">
-                <div class="order-list">
-                    <div class="order-card" th:each="order : ${orders}">
-                        <div class="order-header">
-                            <h3>Order #<span th:text="${order.id}">Order ID</span></h3>
-                            <span class="order-status" th:text="${order.status}">Status</span>
-                        </div>
-                        <div class="order-details">
-                            <p><strong>Date:</strong> <span th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'dd MMM yyyy HH:mm') : 'N/A'}">Date</span></p>
-                            <p><strong>Total:</strong> <span th:text="${'TZS ' + #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 2, 'POINT')}">Total</span></p>
-                            <div class="order-items" th:if="${order.orderItems != null}">
-                                <h4>Items:</h4>
-                                <ul>
-                                    <li th:each="item : ${order.orderItems}">
-                                        <span th:text="${item.item.name}">Item Name</span>
-                                        <span th:text="${'Qty: ' + item.quantity}">Quantity</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="order-actions">
-                            <form th:action="@{/orders/reorder/{id}(id=${order.id})}" method="post" style="display: inline;">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                                <button type="submit" class="btn btn-secondary">Reorder</button>
-                            </form>
-                            <form th:if="${order.status != 'CANCEL_REQUESTED' and order.status != 'CANCELLED'}"
-                                  th:action="@{/orders/{id}/cancel-request(id=${order.id})}"
-                                  method="post" style="display: inline;">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                                <button type="submit" class="btn btn-secondary">Request Cancel</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div th:if="${orders == null or orders.isEmpty()}">
-                <p>You have no orders yet.</p>
-                <a th:href="@{/}" class="btn btn-primary">Start Shopping</a>
-            </div>
-        </section>
-    </main>
+  <main class="main-content">
+    <div th:if="${success}" class="flash-msg flash-success" th:text="${success}"></div>
+    <div th:if="${error}" class="flash-msg flash-error" th:text="${error}"></div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 PicknCart</p>
+    <section class="page-intro">
+      <p class="eyebrow">My Orders</p>
+      <h1 class="page-title">Order History</h1>
+      <p class="page-description">Track delivery progress, review purchased items, and reorder your favorites from one clean workspace.</p>
+    </section>
+
+    <section class="order-list" th:if="${!#lists.isEmpty(orders)}" aria-label="Order history">
+      <article class="order-card" th:each="order : ${orders}" th:id="${'order-' + order.id}">
+        <header class="order-card-header">
+          <div class="order-identity">
+            <span class="meta-label">Order ID</span>
+            <h2 th:text="'#PC-' + ${order.id} + '-TZ'">#PC-00000-TZ</h2>
+          </div>
+          <div class="order-header-grid">
+            <div class="summary-item">
+              <span class="meta-label">Date</span>
+              <strong th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'MMM dd, yyyy') : 'N/A'}">Date</strong>
+            </div>
+            <div class="summary-item">
+              <span class="meta-label">Total</span>
+              <strong class="order-total">TSh <span th:text="${#numbers.formatDecimal(order.totalAmount != null ? order.totalAmount : 0, 0, 'COMMA', 0, 'POINT')}">0</span></strong>
+            </div>
+            <span class="status-pill" th:classappend="${'status-' + #strings.toLowerCase(order.status != null ? order.status : 'placed')}" th:text="${order.status != null ? order.status : 'PLACED'}">Status</span>
+          </div>
+        </header>
+
+        <div class="order-card-body">
+          <section class="tracking-section" th:id="${'tracking-' + order.id}" aria-label="Order tracking progress">
+            <div class="section-heading">
+              <div>
+                <span class="meta-label">Tracking</span>
+                <h3>Delivery progress</h3>
+              </div>
+              <p th:if="${order.status == 'CANCEL_REQUESTED'}">Cancellation request is waiting for admin approval.</p>
+              <p th:unless="${order.status == 'CANCEL_REQUESTED'}">Estimated updates appear as your order moves through fulfillment.</p>
+            </div>
+
+            <div class="tracking-timeline"
+                 th:classappend="${order.status == 'PLACED' ? ' progress-placed' : (order.status == 'PROCESSING' ? ' progress-processing' : (order.status == 'SHIPPED' ? ' progress-shipped' : (order.status == 'DELIVERED' ? ' progress-delivered' : ' progress-paused')))}">
+              <div class="timeline-line" aria-hidden="true"></div>
+              <div class="timeline-progress" aria-hidden="true"></div>
+
+              <div class="timeline-step is-complete">
+                <div class="step-icon"><span class="material-symbols-outlined" aria-hidden="true">receipt_long</span></div>
+                <div class="step-copy">
+                  <strong>Ordered</strong>
+                  <span>Order received</span>
+                </div>
+              </div>
+
+              <div class="timeline-step" th:classappend="${order.status == 'PROCESSING' || order.status == 'SHIPPED' || order.status == 'DELIVERED' ? ' is-complete' : ''}">
+                <div class="step-icon"><span class="material-symbols-outlined" aria-hidden="true">inventory_2</span></div>
+                <div class="step-copy">
+                  <strong>Processing</strong>
+                  <span>Preparing items</span>
+                </div>
+              </div>
+
+              <div class="timeline-step" th:classappend="${order.status == 'SHIPPED' || order.status == 'DELIVERED' ? ' is-complete' : ''}">
+                <div class="step-icon"><span class="material-symbols-outlined" aria-hidden="true">local_shipping</span></div>
+                <div class="step-copy">
+                  <strong>Shipped</strong>
+                  <span>On the way</span>
+                </div>
+              </div>
+
+              <div class="timeline-step" th:classappend="${order.status == 'DELIVERED' ? ' is-complete' : ''}">
+                <div class="step-icon"><span class="material-symbols-outlined" aria-hidden="true">verified</span></div>
+                <div class="step-copy">
+                  <strong>Delivered</strong>
+                  <span>Completed</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="products-section" th:id="${'order-items-' + order.id}" aria-label="Products in order">
+            <div class="section-heading compact">
+              <div>
+                <span class="meta-label">Items</span>
+                <h3 th:text="${#lists.size(order.orderItems)} + ' product(s)'">Products</h3>
+              </div>
+            </div>
+
+            <div class="product-list">
+              <article class="product-row" th:each="oi : ${order.orderItems}">
+                <img class="product-thumb" th:src="${oi.item != null && oi.item.imageUrl != null ? oi.item.imageUrl : 'https://via.placeholder.com/96x96'}" th:alt="${oi.item != null ? oi.item.name : 'Product'}"/>
+                <div class="product-info">
+                  <h4 th:text="${oi.item != null ? oi.item.name : 'Product unavailable'}">Product</h4>
+                  <p th:text="${oi.item != null && oi.item.category != null ? oi.item.category.name : 'PicknCart Merchant'}">Store</p>
+                </div>
+                <div class="product-quantity">
+                  <span class="meta-label">Qty</span>
+                  <strong th:text="${oi.quantity}">1</strong>
+                </div>
+                <div class="product-price">
+                  <span class="meta-label">Price</span>
+                  <strong>TSh <span th:text="${#numbers.formatDecimal(oi.price != null ? oi.price : 0, 0, 'COMMA', 0, 'POINT')}">0</span></strong>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="order-lower-grid" aria-label="Delivery, payment, and actions">
+            <div class="detail-panel">
+              <span class="meta-label">Delivery</span>
+              <p th:text="${order.address != null && !order.address.isBlank() ? order.address : 'Delivery address not provided'}">Delivery address</p>
+              <small th:text="${order.phone != null && !order.phone.isBlank() ? order.phone : 'No phone number'}">Phone</small>
+            </div>
+            <div class="detail-panel">
+              <span class="meta-label">Payment</span>
+              <p th:text="${order.paymentMethod != null && !order.paymentMethod.isBlank() ? order.paymentMethod : 'Payment method unavailable'}">Payment</p>
+              <small>Secure PicknCart checkout</small>
+            </div>
+            <div class="order-actions">
+              <a class="action-button ghost" th:href="${'#order-items-' + order.id}">
+                <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                View Details
+              </a>
+              <a class="action-button ghost" th:href="${'#tracking-' + order.id}">
+                <span class="material-symbols-outlined" aria-hidden="true">route</span>
+                Track Order
+              </a>
+              <form class="inline-form" th:action="@{/orders/reorder/{id}(id=${order.id})}" method="post" th:if="${order.status != 'CANCEL_REQUESTED'}">
+                <button class="action-button primary" type="submit">
+                  <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+                  Reorder
+                </button>
+              </form>
+              <button class="action-button ghost" type="button" onclick="window.print()">
+                <span class="material-symbols-outlined" aria-hidden="true">download</span>
+                Invoice
+              </button>
+              <form class="inline-form" th:action="@{/orders/cancel-request}" method="post" th:if="${order.status == 'PLACED' || order.status == 'SHIPPED'}">
+                <input type="hidden" name="id" th:value="${order.id}"/>
+                <button class="action-button danger" type="submit">
+                  <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </section>
         </div>
-    </footer>
+      </article>
+    </section>
 
-    <script th:src="@{/js/script.js}"></script>
+    <section class="empty-orders" th:if="${#lists.isEmpty(orders)}">
+      <span class="material-symbols-outlined empty-orders-icon" aria-hidden="true">receipt_long</span>
+      <h2>No orders yet</h2>
+      <p>Start shopping to place your first order.</p>
+      <a href="/" class="action-button primary shop-now-link">Shop Now</a>
+    </section>
+
+    <section class="help-grid">
+      <div class="help-card">
+        <h3>Need help with an order?</h3>
+        <p>Our support team can help with tracking, cancellations, delivery updates, and mobile-money payment questions.</p>
+      </div>
+      <div class="support-card">
+        <div>
+          <h3>Secured Payments</h3>
+          <p>All transactions on PicknCart are protected with enterprise-grade checkout safeguards.</p>
+        </div>
+        <div class="support-icons">
+          <div class="support-pill mpesa">M-PESA</div>
+          <div class="support-pill tigo">TIGO PESA</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h2>PicknCart</h2>
+        <p class="footer-copy">&copy; 2024 PicknCart Tanzania. All payments secured by M-Pesa &amp; Tigo Pesa.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/categories">Categories</a>
+        <a href="/cart">Cart</a>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

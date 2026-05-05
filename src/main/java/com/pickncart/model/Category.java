@@ -1,8 +1,8 @@
 package com.pickncart.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
-
 
 @Entity
 @Table(name = "categories")
@@ -17,11 +17,14 @@ public class Category {
 
     private String description;
 
-    // One category has many items
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String imageUrl;
+
     @OneToMany(mappedBy = "category")
+    @JsonIgnore
     private List<Item> items;
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -30,6 +33,9 @@ public class Category {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public List<Item> getItems() { return items; }
     public void setItems(List<Item> items) { this.items = items; }

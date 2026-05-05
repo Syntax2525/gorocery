@@ -1,48 +1,220 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Categories - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Category Management | PicknCart Admin</title>
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/style/admin.css"/>
 </head>
 <body>
-<main class="container">
-    <h1>Manage Categories</h1>
-    <p><a th:href="@{/admin/dashboard}">Back to Dashboard</a></p>
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+<input class="sidebar-toggle" id="sidebarToggle" type="checkbox"/>
+<label class="sidebar-scrim" for="sidebarToggle" aria-hidden="true"></label>
 
-    <section class="auth-card">
-        <h2>Create Category</h2>
-        <form th:action="@{/admin/categories}" method="post">
-            <input type="text" name="name" placeholder="Category name" required>
-            <input type="text" name="description" placeholder="Description">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <button class="btn btn-primary" type="submit">Create</button>
-        </form>
+<aside class="admin-sidebar" aria-label="Admin navigation">
+  <div class="sidebar-brand">
+    <div class="brand-mark">P</div>
+    <div>
+      <h1>PicknCart</h1>
+      <p>Merchant Admin</p>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="/admin/dashboard"><span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span></a>
+    <a class="nav-item" href="/admin/products"><span class="material-symbols-outlined" aria-hidden="true">inventory_2</span><span>Products</span></a>
+    <a class="nav-item" href="/admin/orders"><span class="material-symbols-outlined" aria-hidden="true">receipt_long</span><span>Orders</span></a>
+    <a class="nav-item" href="/admin/users"><span class="material-symbols-outlined" aria-hidden="true">group</span><span>Users</span></a>
+    <a class="nav-item active" href="/admin/categories" aria-current="page"><span class="material-symbols-outlined" aria-hidden="true">category</span><span>Categories</span></a>
+  </nav>
+  <div class="sidebar-account">
+    <div class="account-avatar">A</div>
+    <div>
+      <p>Admin</p>
+      <span>Merchant Store</span>
+    </div>
+  </div>
+</aside>
+
+<div class="admin-shell">
+  <header class="topbar">
+    <label class="mobile-menu-button" for="sidebarToggle" aria-label="Open navigation">
+      <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+    </label>
+    <div>
+      <p class="eyebrow">Catalog</p>
+      <h1>Manage Categories</h1>
+    </div>
+    <div class="topbar-actions">
+      <label class="secondary-action" for="sidebarToggle">
+        <span class="material-symbols-outlined" aria-hidden="true">left_panel_close</span>
+        <span>Sidebar</span>
+      </label>
+      <button class="primary-action" data-open-modal="addModal" type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+        <span>Add Category</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div th:if="${success}" class="flash-msg flash-success" th:text="${success}"></div>
+    <div th:if="${error}" class="flash-msg flash-error" th:text="${error}"></div>
+
+    <section class="page-intro">
+      <div>
+        <h2 class="page-title">Manage Categories</h2>
+        <p>Organize product collections with equal-height cards and consistent actions.</p>
+      </div>
     </section>
 
-    <section class="products">
-        <h2>Existing Categories</h2>
-        <div class="product-grid" th:if="${categories != null and !categories.isEmpty()}">
-            <div class="product-card" th:each="category : ${categories}">
-                <div class="product-info">
-                    <form th:action="@{'/admin/categories/' + ${category.id} + '/update'}" method="post">
-                        <input type="text" name="name" th:value="${category.name}" required>
-                        <input type="text" name="description" th:value="${category.description}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <button class="btn btn-primary" type="submit">Update</button>
-                    </form>
-                    <form th:action="@{'/admin/categories/' + ${category.id} + '/delete'}" method="post" style="margin-top:10px;">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <button class="btn" type="submit">Delete</button>
-                    </form>
-                </div>
-            </div>
+    <section class="categories-grid" aria-label="Categories">
+      <article class="category-card" th:each="cat : ${categories}">
+        <div class="category-media">
+          <img th:alt="${cat.name}" th:src="${cat.imageUrl != null ? cat.imageUrl : 'https://via.placeholder.com/460x236'}"/>
         </div>
-        <p th:if="${categories == null or categories.isEmpty()}">No categories found.</p>
+        <div class="category-body">
+          <div>
+            <p class="eyebrow">Category</p>
+            <h3 th:text="${cat.name}">Category</h3>
+          </div>
+          <p th:text="${cat.description != null ? cat.description : 'No description'}">Description</p>
+          <div class="category-actions">
+            <button class="icon-action" th:attr="data-id=${cat.id}, data-name=${cat.name}, data-desc=${cat.description}, data-image=${cat.imageUrl}" data-edit-category title="Edit" type="button" aria-label="Edit category">
+              <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+            </button>
+            <button class="icon-action danger" th:attr="data-id=${cat.id}" data-delete-category title="Delete" type="button" aria-label="Delete category">
+              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <button class="create-category-card" data-open-modal="addModal" type="button">
+        <span class="material-symbols-outlined" aria-hidden="true">add_circle</span>
+        <strong>Create Category</strong>
+        <p>Add a new department to the storefront.</p>
+      </button>
+
+      <div th:if="${categories.isEmpty()}" class="content-card empty-state">
+        No categories yet
+      </div>
     </section>
-</main>
+  </main>
+
+  <footer class="admin-footer">
+    <strong>PicknCart Tanzania</strong>
+    <nav aria-label="Footer navigation">
+      <a href="/">Home</a>
+      <a href="/categories">Categories</a>
+    </nav>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="addModal">
+  <div class="modal-content">
+    <h3>Add New Category</h3>
+    <form th:action="@{/admin/categories}" method="post" enctype="multipart/form-data">
+      <div class="modal-form-group">
+        <label class="modal-label">Category Name</label>
+        <input class="modal-input" name="name" required type="text"/>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label">Description</label>
+        <textarea class="modal-input" name="description" rows="3"></textarea>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label">Category Image</label>
+        <div class="upload-zone" data-upload-zone>
+          <input class="upload-input" id="categoryImageFile" name="imageFile" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" data-upload-input/>
+          <div class="upload-empty" data-upload-empty>
+            <span class="material-symbols-outlined" aria-hidden="true">cloud_upload</span>
+            <strong>Drop image here or browse gallery</strong>
+            <p>JPG, JPEG, PNG, or WEBP. Max 5 MB.</p>
+          </div>
+          <div class="upload-preview" data-upload-preview hidden>
+            <img alt="Selected category preview" data-upload-preview-image/>
+            <div>
+              <strong data-upload-file-name>Selected image</strong>
+              <p data-upload-file-meta>Ready to upload</p>
+            </div>
+          </div>
+        </div>
+        <div class="upload-actions">
+          <button class="secondary-action" type="button" data-upload-browse>Choose Image</button>
+          <button class="secondary-action danger-outline" type="button" data-upload-remove hidden>Remove</button>
+        </div>
+        <p class="upload-error" data-upload-error hidden></p>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label">Image URL (optional fallback)</label>
+        <input class="modal-input" name="imageUrl" placeholder="https://..." type="text" data-image-url-input/>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-button modal-button-secondary" data-close-modal="addModal" type="button">Cancel</button>
+        <button class="modal-button modal-button-primary" type="submit">Add Category</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal-content">
+    <h3>Edit Category</h3>
+    <form id="editForm" method="post" enctype="multipart/form-data">
+      <input class="modal-input modal-input-spaced" name="name" id="editName" required type="text"/>
+      <textarea class="modal-input modal-input-spaced" name="description" id="editDesc" rows="3"></textarea>
+      <div class="modal-form-group">
+        <label class="modal-label">Replace Category Image</label>
+        <div class="upload-zone" data-upload-zone>
+          <input class="upload-input" id="editImageFile" name="imageFile" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" data-upload-input/>
+          <div class="upload-empty" data-upload-empty>
+            <span class="material-symbols-outlined" aria-hidden="true">cloud_upload</span>
+            <strong>Drop replacement image here or browse gallery</strong>
+            <p>Leave empty to keep the current image.</p>
+          </div>
+          <div class="upload-preview" data-upload-preview hidden>
+            <img alt="Selected replacement category preview" data-upload-preview-image/>
+            <div>
+              <strong data-upload-file-name>Selected image</strong>
+              <p data-upload-file-meta>Ready to upload</p>
+            </div>
+          </div>
+        </div>
+        <div class="upload-actions">
+          <button class="secondary-action" type="button" data-upload-browse>Choose Image</button>
+          <button class="secondary-action danger-outline" type="button" data-upload-remove hidden>Remove</button>
+        </div>
+        <p class="upload-error" data-upload-error hidden></p>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label">Image URL (optional fallback)</label>
+        <input class="modal-input" name="imageUrl" id="editImage" placeholder="https://..." type="text" data-image-url-input/>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-button modal-button-secondary" data-close-modal="editModal" type="button">Cancel</button>
+        <button class="modal-button modal-button-primary" type="submit">Update Category</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-content modal-content-centered">
+    <span class="material-symbols-outlined modal-warning-icon" aria-hidden="true">warning</span>
+    <h3>Confirm Delete</h3>
+    <p>Are you sure you want to delete this category?</p>
+    <form id="deleteForm" method="post">
+      <div class="modal-actions">
+        <button class="modal-button modal-button-secondary" data-close-modal="deleteModal" type="button">Cancel</button>
+        <button class="modal-button modal-button-danger" type="submit">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/admin-categories.js"></script>
 </body>
 </html>

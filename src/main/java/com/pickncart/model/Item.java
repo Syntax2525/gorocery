@@ -19,6 +19,8 @@ public class Item {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     private int stock;

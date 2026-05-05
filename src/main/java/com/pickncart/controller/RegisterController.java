@@ -25,34 +25,40 @@ public class RegisterController {
 
     @PostMapping("/register")
     public String registerUser(
-            @RequestParam String firstName,
-            @RequestParam String lastName,
+            @RequestParam String fullName,
             @RequestParam String email,
+            @RequestParam String phoneNumber,
             @RequestParam String password,
             @RequestParam String confirmPassword,
+            @RequestParam(required = false) String district,
+            @RequestParam(required = false) String street,
             RedirectAttributes redirectAttributes) {
-        
-        // Validate passwords match
+
         if (!password.equals(confirmPassword)) {
             redirectAttributes.addFlashAttribute("error", "Passwords do not match");
             return "redirect:/register";
         }
-        
-        // Check if user already exists
-        if (userService.findByEmail(email).isPresent()) {
+
+        if (userService.existsByEmail(email)) {
             redirectAttributes.addFlashAttribute("error", "Email already registered");
             return "redirect:/register";
         }
-        
-        // Create new user
+
+        String[] nameParts = fullName.trim().split("\\s+", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
         User user = new User();
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setEmail(email);
-        user.setPassword(password); // Password will be encoded in UserService
-        user.setUsername(email); // Use email as username for simplicity
-        user.setRole("CUSTOMER"); // Default role
-        
+        user.setPhoneNumber(phoneNumber);
+        user.setPassword(password);
+        user.setUsername(email);
+        user.setRole("CUSTOMER");
+        user.setDistrict(district);
+        user.setStreet(street);
+
         try {
             userService.register(user);
             redirectAttributes.addFlashAttribute("success", "Registration successful! Please login.");

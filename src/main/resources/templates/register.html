@@ -1,78 +1,143 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Join PicknCart - Modern Tanzanian Shopping</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link href="/style/register.css" rel="stylesheet"/>
 </head>
-<body>
-    <header>
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <a th:href="@{/}">PicknCart</a>
-                </div>
-                <ul class="nav-menu">
-                    <li><a th:href="@{/}">Home</a></li>
-                    <li><a th:href="@{/categories}">Categories</a></li>
-                    <li><a th:href="@{/cart}">Cart</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/orders}">Orders</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/profile}">Profile</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/login}">Login</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/register}">Register</a></li>
-                    <li sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" style="display: inline;">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button type="submit" class="btn-link">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container">
-        <section class="auth-section">
-            <div class="auth-card">
-                <h2>Register</h2>
-                <form th:action="@{/register}" method="post">
-                    <div class="form-group">
-                        <label for="firstName">First Name</label>
-                        <input type="text" id="firstName" name="firstName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="lastName">Last Name</label>
-                        <input type="text" id="lastName" name="lastName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required>
-                    </div>
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <button type="submit" class="btn btn-primary btn-block">Register</button>
-                </form>
-                <p class="auth-link">
-                    Already have an account? <a th:href="@{/login}">Login here</a>
-                </p>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 PicknCart</p>
+<body class="register-page">
+  <main class="register-main">
+    <div class="gradient-top-right"></div>
+    <div class="gradient-bottom-left"></div>
+    <div class="auth-wrapper">
+      <div class="auth-side">
+        <img class="auth-image" alt="Tanzanian professional" th:src="@{/images/pp.png}"/>
+        <div class="auth-side-overlay">
+          <h2>Karibu PicknCart</h2>
+          <p>Experience the future of Tanzanian commerce with secure payments and rapid delivery.</p>
         </div>
-    </footer>
+      </div>
+      <div class="auth-panel">
+        <div class="auth-header">
+          <div class="brand-title">PicknCart</div>
+          <p class="section-title">Create New Account</p>
+        </div>
 
-    <script th:src="@{/js/script.js}"></script>
+        <div th:if="${error}" class="flash-msg flash-error" th:text="${error}"></div>
+
+        <form class="register-form" th:action="@{/register}" method="post" id="registerForm">
+          <section class="form-section">
+            <h3><span class="material-symbols-outlined icon-sm">person</span> Personal Details</h3>
+            <div class="section-grid">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input class="form-input" name="fullName" placeholder="mayenze Ng'wena" type="text" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input class="form-input" name="email" placeholder="mayenze@example.com" type="email" required/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <div class="input-row">
+                <!--<span class="phone-prefix">+255</span> -->
+				<select class="phone-prefix" name="countryCode" required>
+					<option value="+255">Tanzania (+255)</option>
+					  <option value="+254">Kenya (+254)</option>
+					  <option value="+256">Uganda (+256)</option>
+					  <option value="+250">Rwanda (+250)</option>
+					  <option value="+257">Burundi (+257)</option>
+					  <option value="+211">South Sudan (+211)</option>
+					  <option value="+251">Ethiopia (+251)</option>
+					  <option value="+253">Djibouti (+253)</option>
+					  <option value="+252">Somalia (+252)</option>
+					  <option value="+260">Zambia (+260)</option>
+					  <option value="+243">DR Congo (+243)</option>
+				   </select>
+                <input class="form-input" name="phoneNumber" placeholder="712 345 678" type="tel" required/>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3><span class="material-symbols-outlined icon-sm">lock</span> Security</h3>
+            <div class="section-grid">
+              <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="password-field">
+                  <input class="form-input" name="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" type="password" id="password" required/>
+                  <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password">
+                    <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <div class="password-field">
+                  <input class="form-input" name="confirmPassword" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" type="password" id="confirmPassword" required/>
+                  <button class="password-toggle" type="button" data-password-toggle="confirmPassword" aria-label="Show password">
+                    <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="form-error" id="passwordError"></p>
+          </section>
+
+          <section class="form-section">
+            <h3><span class="material-symbols-outlined icon-sm">location_on</span> Address Information</h3>
+            <div class="section-grid">
+              <div class="form-group">
+                <label class="form-label">District</label>
+                <select class="form-select" name="district">
+                  <option value="">Select District</option>
+                  <option>Kinondoni</option>
+                  <option>Ilala</option>
+                  <option>Temeke</option>
+                  <option>Ubungo</option>
+                  <option>Kigamboni</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Street Name</label>
+                <input class="form-input" name="street" placeholder="Mji mwema Rd" type="text"/>
+              </div>
+            </div>
+          </section>
+
+          <div class="checkbox-row">
+            <label class="checkbox-label">
+              <input class="checkbox-input" type="checkbox" required/>
+              <span>I agree to the <a href="/register">Terms and Conditions</a> and understand how PicknCart processes my personal data.</span>
+            </label>
+          </div>
+
+          <button class="button-primary" type="submit">
+            Complete Registration
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+
+          <p>Already have an account? <a href="/login">Log in here</a></p>
+        </form>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="footer-brand">
+      <span>PicknCart</span>
+      <p>&copy; 2026 PicknCart Tanzania. All payments secured.</p>
+    </div>
+    <div class="footer-links">
+      <a href="/categories">About Us</a>
+      <a href="/checkout">Payment Methods</a>
+      <a href="/register">Privacy Policy</a>
+      <a href="/admin/dashboard">Vendor Terms</a>
+    </div>
+  </footer>
+  <script src="/js/register.js"></script>
 </body>
 </html>

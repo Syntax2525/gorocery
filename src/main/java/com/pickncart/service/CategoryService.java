@@ -31,4 +31,15 @@ public class CategoryService {
     public void deleteById(Long id) {
         categoryRepository.deleteById(id);
     }
+
+    public Category update(Long id, Category updatedCategory) {
+        Category existingCategory = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        existingCategory.setName(updatedCategory.getName());
+        existingCategory.setDescription(updatedCategory.getDescription());
+        existingCategory.setImageUrl(updatedCategory.getImageUrl());
+
+        return categoryRepository.save(existingCategory);
+    }
 }

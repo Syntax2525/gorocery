@@ -49,25 +49,38 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             .csrf(csrf -> csrf
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                .ignoringRequestMatchers("/admin/products/**")
+                .ignoringRequestMatchers("/api/**")
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/",
+                        "/error",
+                        "/favicon.ico",
                         "/login",
                         "/register",
                         "/categories",
                         "/category/**",
-                        "/cart",
-                        "/checkout",
-                        "/css/**",
+                        "/style/**",
                         "/js/**",
                         "/images/**",
                         "/uploads/**"
                 ).permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/users/register").permitAll()
+                .requestMatchers("/api/items/**").permitAll()
+                .requestMatchers("/api/categories/**").permitAll()
+                .requestMatchers("/api/suggestions/**").permitAll()
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(403);
+                    request.setAttribute("jakarta.servlet.error.status_code", 403);
+                    request.setAttribute("jakarta.servlet.error.message", "Access denied");
+                    request.getRequestDispatcher("/error").forward(request, response);
+                })
             )
             .formLogin(form -> form
                 .loginPage("/login")
@@ -82,15 +95,19 @@ public class SecurityConfig {
                         response.sendRedirect("/");
                     }
                 })
+                .failureHandler((request, response, exception) -> {
+                    response.sendRedirect("/login?error=true");
+                })
                 .permitAll()
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
             );
 
         return http.build();
     }
 }
-

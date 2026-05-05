@@ -1,76 +1,110 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | PicknCart Tanzania</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="/style/login.css" rel="stylesheet"/>
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <a th:href="@{/}">PicknCart</a>
-                </div>
-                <ul class="nav-menu">
-                    <li><a th:href="@{/}">Home</a></li>
-                    <li><a th:href="@{/categories}">Categories</a></li>
-                    <li><a th:href="@{/cart}">Cart</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/orders}">Orders</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/profile}">Profile</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/login}">Login</a></li>
-                    <li sec:authorize="!isAuthenticated()"><a th:href="@{/register}">Register</a></li>
-                    <li sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" style="display: inline;">
-                            <div th:if="${_csrf != null}">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            </div>
-                            <button type="submit" class="btn-link">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container">
-        <section class="auth-section">
-            <div class="auth-card">
-                <h2>Login</h2>
-                <form th:action="@{/login}" method="post">
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
-                    <div th:if="${param.error}" class="alert alert-error">
-                        Invalid email or password.
-                    </div>
-                    <div th:if="${param.logout}" class="alert alert-success">
-                        You have been logged out successfully.
-                    </div>
-                    <div th:if="${_csrf != null}">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
-                </form>
-                <p class="auth-link">
-                    Don't have an account? <a th:href="@{/register}">Register here</a>
-                </p>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>© 2026 PicknCart</p>
+<main>
+  <section class="hidden md-flex md-w-1-2 lg-w-3-5 relative overflow-hidden bg-primary">
+    <div class="absolute inset-0 z-0">
+      <img alt="Dar es Salaam Skyline" class="w-full h-full object-cover opacity-60 mix-blend-overlay" th:src="@{/images/shoping.png}"/>
+    </div>
+    <div class="relative z-10 w-full h-full flex flex-col justify-between p-12 text-on-primary">
+      <div>
+        <div class="flex items-center gap-2 mb-8">
+          <span class="text-3xl font-black tracking-tight">PicknCart</span>
         </div>
-    </footer>
+        <h1 class="font-h1 text-h1 max-w-lg mb-6">Experience Modern Shopping in Tanzania</h1>
+        <p class="font-body-lg text-body-lg max-w-md opacity-90">Secure, fast, and local. Join thousands of shoppers in the digital heart of Tanzania.</p>
+      </div>
+      <div class="glass-effect p-6 rounded-xl self-start">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-surface-container-lowest rounded-full flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-2xl">verified</span>
+          </div>
+          <div>
+            <p class="font-label-md text-label-md text-primary">M-Pesa Verified Merchant</p>
+            <p class="text-sm text-on-surface-variant">Trusted by Vodacom Tanzania</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-0 right-0 w-64 h-64 bg-secondary-container rounded-full blur-120px opacity-20 -mb-32 -mr-32"></div>
+  </section>
+  <section class="w-full md-w-1-2 lg-w-2-5 flex items-center justify-center p-gutter bg-surface-container-lowest">
+    <div class="w-full max-w-md">
+      <div class="md-hidden flex justify-center mb-8">
+        <span class="text-2xl font-black text-primary tracking-tight">PicknCart</span>
+      </div>
+      <header class="mb-10">
+        <h2 class="font-h2 text-h2 text-on-surface mb-2">Welcome Back</h2>
+        <p class="text-on-surface-variant">Log in to your account to continue shopping.</p>
+      </header>
 
-    <script th:src="@{/js/script.js}"></script>
+      <div th:if="${error}" class="flash-msg flash-error" th:text="${error}"></div>
+      <div th:if="${success}" class="flash-msg flash-success" th:text="${success}"></div>
+
+      <form th:action="@{/login}" method="post" class="space-y-6">
+        <div>
+          <label class="block font-label-md text-label-md text-on-surface mb-2" for="email">Email Address</label>
+          <input class="w-full px-4 py-3 bg-surface-container-low border-none rounded-lg focus-ring-2 focus-ring-primary-container text-on-surface placeholder-outline" id="email" name="username" placeholder="mayenze@gmail.com" type="email" required/>
+        </div>
+        <div>
+          <div class="flex justify-between mb-2">
+            <label class="block font-label-md text-label-md text-on-surface" for="password">Password</label>
+          </div>
+          <div class="password-field">
+            <input class="w-full px-4 py-3 bg-surface-container-low border-none rounded-lg focus-ring-2 focus-ring-primary-container text-on-surface placeholder-outline" id="password" name="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" type="password" required/>
+            <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password">
+              <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <input class="w-4 h-4 text-primary border-outline rounded focus-ring-primary" id="remember" name="remember" type="checkbox"/>
+          <label class="ml-2 font-label-sm text-label-sm text-on-surface-variant" for="remember">Remember me</label>
+        </div>
+        <button class="w-full bg-primary-container hover-bg-primary text-on-primary font-label-md py-4 rounded-lg transition-all active-scale-98 shadow-lg shadow-primary-container-20" type="submit">Sign In</button>
+      </form>
+      <div class="relative my-10">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-surface-container-highest"></div>
+        </div>
+        <div class="relative flex justify-center text-label-sm uppercase">
+          <span class="bg-surface-container-lowest px-4 text-on-surface-variant">Or continue with</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <button class="flex items-center justify-center gap-2 px-4 py-3 border border-surface-container-highest rounded-lg hover:bg-surface-container-low transition-colors" type="button">
+          <img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtTgjAQ2gdkpo1av41xgDG8L3QjthAJPro2CKyGC8-8Z-yqp7bv6aTasY9e76xYq-gGvCqXdrZQYoQFVmEJlioCWsqdgUB7Z8zy5aPlwPKuKzoIkfws9-YbxjAcZJsD8kfJ-2sr7IWZQiaK3Q4Uw81jqS8dlYSTRYNnGhx-TgTreO6-ETCun7pS3v8SNYKCrgFMgvvhJT1nwpO9Y3lxBktWXNfo6JTmpyZw3Wqx_0o9gXcOUh32HJ4gRuqfBy_boivcxdOCIg8I1U"/>
+          <span class="font-label-md text-on-surface-variant">Google</span>
+        </button>
+        <button class="flex items-center justify-center gap-2 px-4 py-3 border border-surface-container-highest rounded-lg hover:bg-surface-container-low transition-colors" type="button">
+          <svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+          <span class="font-label-md text-on-surface-variant">Facebook</span>
+        </button>
+      </div>
+      <p class="mt-10 text-center text-on-surface-variant font-label-md">
+        Don't have an account? 
+        <a class="text-secondary font-bold hover:underline" href="/register">Create Account</a>
+      </p>
+      <div class="mt-12 flex justify-center items-center gap-6 opacity-60">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded bg-red-600 flex items-center justify-center text-10px text-white font-bold leading-none px-1">M-Pesa</div>
+          <span class="text-10px font-bold uppercase tracking-widest text-on-surface">Verified</span>
+        </div>
+        <div class="flex items-center gap-2 border-l border-surface-container-highest pl-6">
+          <div class="w-8 h-8 rounded bg-blue-700 flex items-center justify-center text-10px text-white font-bold leading-none px-1">Tigo</div>
+          <span class="text-10px font-bold uppercase tracking-widest text-on-surface">Partner</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="/js/login.js"></script>
 </body>
 </html>

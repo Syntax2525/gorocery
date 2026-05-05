@@ -1,60 +1,206 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title != null ? title + ' - PicknCart' : 'PicknCart - E-commerce'}">PicknCart</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style/layout.css"/>
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-brand">
-                    <a th:href="@{/}">PicknCart</a>
-                </div>
-                <ul class="nav-menu">
-                    <li><a th:href="@{/}">Home</a></li>
-                    <li><a th:href="@{/categories}">Categories</a></li>
-                    <li><a th:href="@{/cart}">Cart</a></li>
-                    <li sec:authorize="isAuthenticated()">
-                        <a th:href="@{/orders}">Orders</a>
-                    </li>
-                    <li sec:authorize="isAuthenticated()">
-                        <a th:href="@{/profile}">Profile</a>
-                    </li>
-                    <li sec:authorize="!isAuthenticated()">
-                        <a th:href="@{/login}">Login</a>
-                    </li>
-                    <li sec:authorize="!isAuthenticated()">
-                        <a th:href="@{/register}">Register</a>
-                    </li>
-                    <li sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" style="display: inline;">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button type="submit" class="btn-link">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container">
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-        
-        <div th:replace="~{::content}"></div>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 PicknCart</p>
-			<p> tysonmayenze147@gmail.com</p>
-        </div>
-    </footer>
-
-    <script th:src="@{/js/script.js}"></script>
-</body>
-</html>
-
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-white-80 backdrop-blur-md border-b border-gray-200 shadow-0_4px_20px_rgba_0_0_0_0_05">
+<div class="flex justify-between items-center px-4 md-px-8 py-3 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-teal-700 tracking-tight">PicknCart</span>
+<nav class="hidden md-flex gap-6 items-center">
+<a class="text-teal-700 font-bold border-b-2 border-orange-500 transition-colors" href="layout.html">Home</a>
+<a class="text-gray-600 hover-text-teal-600 transition-colors" href="categories.html">Categories</a>
+<a class="text-gray-600 hover-text-teal-600 transition-colors" href="category-items.html">Deals</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm-block">
+<span class="material-symbols-outlined absolute left-3 top-1-2 -translate-y-1-2 text-gray-400">search</span>
+<input class="bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus-ring-2 focus-ring-primary-container w-64" placeholder="Search items..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<a href="cart.html" class="p-2 text-gray-600 hover-text-teal-600 transition-colors active-scale-95 transition-transform icon-link"><span class="material-symbols-outlined">shopping_cart</span></a>
+<a href="orders.html" class="p-2 text-gray-600 hover-text-teal-600 transition-colors active-scale-95 transition-transform icon-link"><span class="material-symbols-outlined">notifications</span></a>
+<a href="profile.html" class="p-2 text-gray-600 hover-text-teal-600 transition-colors active-scale-95 transition-transform icon-link"><span class="material-symbols-outlined">person</span></a>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-20 pb-16 px-gutter md-px-margin max-w-7xl mx-auto">
+<!-- UI Architecture Section: Sidebars comparison -->
+<div class="mt-8">
+<h1 class="font-h1 text-h1 text-on-surface mb-8">UI Architecture System</h1>
+<div class="grid grid-cols-1 lg-grid-cols-2 gap-12 items-start">
+<!-- Customer Sidebar Example -->
+<div class="space-y-4">
+<h3 class="font-h3 text-h3 text-secondary px-2">Customer Navigation</h3>
+<div class="bg-white rounded-r-lg shadow-xl flex flex-col h-500px py-6 w-full max-w-sm border border-gray-100">
+<div class="px-6 mb-8 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a young Tanzanian professional woman smiling warmly against a blurred office background. The lighting is soft and natural, emphasizing a bright and welcoming atmosphere. The image uses high-key tones consistent with a modern corporate brand identity, featuring clean textures and a sense of approachable authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDToKY4sCKSXr_gqav35mBYtp6Z5I9m8I8s97jbp71s4izosmna821rOpf_ScH_SCRu26d7mB9Q24Jkd_bQL2hAlJqUdiFq5JtLMbz9vkAMhxeHgtBF75p0AcI6b7EpKJCMbyZknReNvfLHyAtCxRMPB5wYNE5fXTmo0l_sbRIK_ueRbQNf7yYr4zN36SQjGP_kyDdJi5n-6fQFvMu7HqGHPwq5PJYpY_9Na-7BF_5L6FFjK4HEO1frTDLkC_FQARRsdL3OWkS74eA"/>
+</div>
+<div>
+<p class="font-bold text-teal-700 text-lg leading-tight">Karibu, PicknCart</p>
+<p class="text-gray-500 text-xs">Modern Tanzanian Shopping</p>
+</div>
+</div>
+<nav class="flex-1 divide-y divide-gray-100">
+<div class="py-2 space-y-1">
+<a class="flex items-center gap-4 px-6 py-3 bg-teal-50 text-teal-700 border-r-4 border-orange-500 font-medium transition-transform hover-translate-x-1" href="layout.html">
+<span class="material-symbols-outlined icon-filled">home</span>
+<span>Home</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-gray-600 hover-bg-gray-50 font-medium transition-transform hover-translate-x-1" href="categories.html">
+<span class="material-symbols-outlined">grid_view</span>
+<span>Categories</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-gray-600 hover-bg-gray-50 font-medium transition-transform hover-translate-x-1" href="category-items.html">
+<span class="material-symbols-outlined">sell</span>
+<span>Deals</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-gray-600 hover-bg-gray-50 font-medium transition-transform hover-translate-x-1" href="orders.html">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>My Orders</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-gray-600 hover-bg-gray-50 font-medium transition-transform hover-translate-x-1" href="orders.html">
+<span class="material-symbols-outlined">support_agent</span>
+<span>Help Center</span>
+</a>
+</div>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full bg-primary py-3 rounded-xl text-white font-bold shadow-md hover-bg-primary-container transition-all active-scale-95">Download App</button>
+</div>
+</div>
+</div>
+<!-- Admin Sidebar Example -->
+<div class="space-y-4">
+<h3 class="font-h3 text-h3 text-tertiary px-2">Merchant Admin Cluster</h3>
+<div class="bg-gray-50 border-r border-gray-200 h-500px flex flex-col w-full max-w-sm rounded-xl overflow-hidden">
+<div class="p-6 border-b border-gray-200 bg-white">
+<h2 class="font-black text-teal-800 text-xl">Merchant Admin</h2>
+<p class="text-gray-500 text-xs">Manage PicknCart Store</p>
+</div>
+<nav class="flex-1 py-4 flex flex-col gap-2">
+<a class="flex items-center gap-4 px-4 py-3 bg-white text-teal-700 shadow-sm rounded-lg mx-4 scale-98 transition-all" href="admin-orders.html">
+<span class="material-symbols-outlined icon-filled">inventory_2</span>
+<span class="text-sm font-semibold">Inventory</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-gray-500 hover-bg-gray-100 rounded-lg mx-4 transition-all" href="admin-users.html">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-gray-500 hover-bg-gray-100 rounded-lg mx-4 transition-all" href="admin-dashboard.html">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Customers</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-gray-500 hover-bg-gray-100 rounded-lg mx-4 transition-all mt-auto" href="layout.html">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Store Settings</span>
+</a>
+</nav>
+</div>
+</div>
+</div>
+<!-- Modal & Toast Overlay Examples -->
+<div class="mt-xl grid grid-cols-1 md-grid-cols-2 gap-8">
+<!-- Modal Representation -->
+<div class="relative min-h-400px rounded-3xl overflow-hidden border border-gray-200 bg-surface-container-low flex items-center justify-center p-8">
+<div class="absolute inset-0 z-0 bg-gray-200/50"></div>
+<!-- Glassmorphism Modal -->
+<div class="relative z-10 w-full max-w-md bg-white-70 backdrop-blur-xl border border-white-40 shadow-2xl rounded-3xl p-8">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">Confirm Payment</h3>
+<p class="text-body-md text-on-surface-variant">Review transaction details</p>
+</div>
+<button class="p-2 hover-bg-gray-100-50 rounded-full"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between p-4 bg-white-40 rounded-xl border border-white-40">
+<span class="text-on-surface-variant">Amount</span>
+<span class="font-bold text-primary">Tsh 45,000</span>
+</div>
+<div class="flex items-center gap-4 p-4 bg-white-40 rounded-xl border border-white-40">
+<div class="w-12 h-8 bg-red-600 rounded flex items-center justify-center text-8px text-white font-bold">M-PESA</div>
+<div>
+<p class="text-sm font-bold">Vodacom M-Pesa</p>
+<p class="text-xs text-gray-500">+255 7XX XXX 123</p>
+</div>
+</div>
+</div>
+<button class="w-full bg-secondary py-4 rounded-xl text-white font-bold text-lg hover-opacity-90 transition-opacity">Confirm &amp; Pay Now</button>
+</div>
+<div class="absolute top-4 left-4 bg-white px-3 py-1 rounded-full text-10px font-bold uppercase tracking-widest text-teal-700 shadow-sm border border-gray-100">Modal Container</div>
+</div>
+<!-- Toast Representation -->
+<div class="relative min-h-400px rounded-3xl overflow-hidden border border-gray-200 bg-surface-container-low flex flex-col items-center justify-center gap-4 p-8">
+<!-- Success Toast -->
+<div class="bg-white shadow-xl rounded-2xl p-4 flex items-center gap-4 border-l-4 border-green-500 w-full max-w-sm">
+<div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+<span class="material-symbols-outlined icon-filled">check_circle</span>
+</div>
+<div class="flex-1">
+<p class="font-bold text-sm">Order Placed Successfully</p>
+<p class="text-xs text-gray-500">Redirecting to tracking page...</p>
+</div>
+<button class="text-gray-400"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<!-- Error Toast -->
+<div class="bg-white shadow-xl rounded-2xl p-4 flex items-center gap-4 border-l-4 border-error w-full max-w-sm">
+<div class="w-10 h-10 bg-error-container rounded-full flex items-center justify-center text-error">
+<span class="material-symbols-outlined icon-filled">error</span>
+</div>
+<div class="flex-1">
+<p class="font-bold text-sm">Connection Failed</p>
+<p class="text-xs text-gray-500">Please check your internet and try again.</p>
+</div>
+<button class="text-gray-400"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<!-- Info Toast -->
+<div class="bg-surface-dim-80 backdrop-blur-md shadow-xl rounded-2xl p-4 flex items-center gap-4 w-full max-w-sm">
+<div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center text-teal-700">
+<span class="material-symbols-outlined">info</span>
+</div>
+<div class="flex-1">
+<p class="font-bold text-sm text-on-surface">New Offer Available</p>
+<p class="text-xs text-on-surface-variant">Check your deals for 20% discount.</p>
+</div>
+</div>
+<div class="absolute top-4 left-4 bg-white px-3 py-1 rounded-full text-10px font-bold uppercase tracking-widest text-teal-700 shadow-sm border border-gray-100">Toast Notifications</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full rounded-t-3xl bg-gray-100 border-t border-gray-200">
+<div class="flex flex-col md-flex-row justify-between items-center px-8 py-12 gap-6 max-w-7xl mx-auto">
+<div class="flex flex-col gap-4 text-center md-text-left">
+<span class="font-bold text-gray-900 text-xl">PicknCart</span>
+<p class="font-Inter text-xs uppercase tracking-wider text-gray-500 max-w-xs">
+                    © 2024 PicknCart Tanzania. All payments secured by M-Pesa &amp; Tigo Pesa.
+                </p>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="font-Inter text-xs uppercase tracking-wider text-gray-500 hover-text-teal-600 transition-colors" href="layout.html">About Us</a>
+<a class="font-Inter text-xs uppercase tracking-wider text-gray-500 hover-text-teal-600 transition-colors" href="checkout.html">Payment Methods</a>
+<a class="font-Inter text-xs uppercase tracking-wider text-gray-500 hover-text-teal-600 transition-colors" href="register.html">Privacy Policy</a>
+<a class="font-Inter text-xs uppercase tracking-wider text-gray-500 hover-text-teal-600 transition-colors" href="admin-dashboard.html">Vendor Terms</a>
+</div>
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-gray-200 hover-border-teal-400 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm">share</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-gray-200 hover-border-teal-400 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm">public</span>
+</div>
+</div>
+</div>
+</footer>
+</body></html>
